@@ -1,21 +1,20 @@
 {
-  "name": "typescript-action",
+  "name": "automatic-merge-up-action",
   "description": "GitHub Actions TypeScript template",
-  "version": "0.0.0",
-  "author": "",
+  "version": "0.0.1",
+  "author": "alcaeus",
   "private": true,
-  "homepage": "https://github.com/actions/typescript-action",
+  "homepage": "https://github.com/alcaeus/automatic-merge-up-action",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/actions/typescript-action.git"
+    "url": "git+https://github.com/alcaeus/automatic-merge-up-action.git"
   },
   "bugs": {
-    "url": "https://github.com/actions/typescript-action/issues"
+    "url": "https://github.com/alcaeus/automatic-merge-up-action/issues"
   },
   "keywords": [
     "actions",
-    "node",
-    "setup"
+    "node"
   ],
   "exports": {
     ".": "./dist/index.js"
@@ -70,11 +69,11 @@
   },
   "devDependencies": {
     "@types/jest": "^29.5.12",
-    "@types/node": "^20.11.19",
-    "@typescript-eslint/eslint-plugin": "^7.0.0",
-    "@typescript-eslint/parser": "^6.21.0",
+    "@types/node": "^20.11.22",
+    "@typescript-eslint/eslint-plugin": "^7.1.0",
+    "@typescript-eslint/parser": "^7.1.0",
     "@vercel/ncc": "^0.38.1",
-    "eslint": "^8.56.0",
+    "eslint": "^8.57.0",
     "eslint-plugin-github": "^4.10.1",
     "eslint-plugin-jest": "^27.9.0",
     "eslint-plugin-jsonc": "^2.13.0",
