@@ -5,7 +5,8 @@ on:
     branches:
       - main
   push:
-    branches: ~
+    branches:
+      - main
 
 permissions:
   contents: read
