@@ -1,0 +1,38 @@
+name: Merge up
+
+on:
+  push:
+    branches:
+      # Keep this in sync with the branch name pattern used below
+      - v*.*
+
+# Enable GITHUB_TOKEN to push to repository and create a PR
+# These permissions are required in case you want to provide your own token
+permissions:
+  contents: write
+  pull-requests: write
+
+# Export GitHub token to environment - you can pass your own token here if desired
+env:
+  GH_TOKEN: ${{ github.token }}
+
+jobs:
+  merge-up:
+    name: Create merge up pull request
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        id: checkout
+        uses: actions/checkout@v4
+        with:
+          # Make sure to include fetch-depth 0 so all branches are fetched, not just the current one
+          fetch-depth: 0
+
+      - name: Create pull request
+        id: create-pull-request
+        uses: alcaeus/automatic-merge-up-action@master
+        with:
+          ref: ${{ github.ref_name }}
+          branchNamePattern: 'v<major>.<minor>'
+          fallbackBranch: 'main'
