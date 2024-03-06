@@ -31,7 +31,7 @@ jobs:
 
       - name: Create pull request
         id: create-pull-request
-        uses: alcaeus/automatic-merge-up-action@master
+        uses: alcaeus/automatic-merge-up-action@main
         with:
           ref: ${{ github.ref_name }}
           branchNamePattern: 'v<major>.<minor>'
