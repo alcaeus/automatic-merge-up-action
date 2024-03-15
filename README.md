@@ -25,6 +25,20 @@ commits are found. Once the merge-up pull request has been merged, the action wi
 branch has been found. It can thus be used to efficiently merge changes up through several releases, ensuring branch
 protection rules and CI requirements are met.
 
+### Default token
+
+If you have no GitHub Actions workflows that are run when a new pull request is pushed, you can rely on the default
+token as long as you specify additional permissions for it:
+```yml
+permissions:
+  contents: write
+  pull-requests: write
+```
+
+If you need to run actions on newly created pull request, create a custom token with the "repo" scope and use it instead
+of the default `github.token`. Note that you also need to pass a token to the checkout action to ensure credentials are
+set in the git repository to allow you to push a new branch.
+
 ## Resolving Conflicts
 
 The action creates an intermediate branch as head reference for the pull request. For example, when merging `v1.3` into
