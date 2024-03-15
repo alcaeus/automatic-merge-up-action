@@ -1,6 +1,13 @@
 import * as exec from '@actions/exec'
-import { ExecOutput } from '@actions/exec'
+import { ExecOptions, ExecOutput } from '@actions/exec'
 import { escapeRegex } from './regex'
+
+export type Commit = {
+  hash: string
+  subject: string
+}
+
+export type CommitList = Commit[]
 
 export type PullRequestResult = {
   id: number
@@ -52,18 +59,19 @@ export async function createPullRequest(
   baseName: string
 ): Promise<PullRequestResult> {
   const title = `Merge ${branchName} into ${baseName}`
+  const formattedCommitList: string = formatCommits(
+    await getCommitList(branchName, baseName)
+  )
 
-  const output: ExecOutput = await exec.getExecOutput('gh', [
-    'pr',
-    'create',
-    '--base',
-    baseName,
-    '--title',
-    title,
-    // TODO: Add info here?
-    '--body',
-    ''
-  ])
+  const options: ExecOptions = {
+    input: Buffer.from(formattedCommitList)
+  }
+
+  const output: ExecOutput = await exec.getExecOutput(
+    'gh',
+    ['pr', 'create', '--base', baseName, '--title', title, '--body-file', '-'],
+    options
+  )
 
   const matches = output.stdout.match(
     /(https:\/\/github\.com\/.+\/pull\/(\d+))$/m
@@ -95,4 +103,42 @@ export async function hasNewCommits(
   const regex = new RegExp(`${escapedRegex}$`, 'm')
 
   return !regex.test(output.stdout)
+}
+
+async function getCommitList(
+  branchName: string,
+  baseName: string
+): Promise<CommitList> {
+  const output: ExecOutput = await exec.getExecOutput('git', [
+    'log',
+    '--format="%h %s"',
+    `${baseName}..${branchName}`
+  ])
+
+  const outputLines = output.stdout.split('\n')
+
+  const results: CommitList = []
+  for (const outputLine of outputLines) {
+    const matches = outputLine.match(/^([^ ]+) (.*)$/)
+    if (!matches) {
+      continue
+    }
+
+    results.push({
+      hash: matches[1],
+      subject: matches[2]
+    })
+  }
+
+  return results
+}
+
+function formatCommits(commits: CommitList): string {
+  if (!commits.length) {
+    return ''
+  }
+
+  return commits
+    .map((commit: Commit) => `* ${commit.subject}: ${commit.hash}`)
+    .join('\n')
 }

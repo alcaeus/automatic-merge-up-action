@@ -26002,17 +26002,11 @@ async function pushBranch(branchName) {
 exports.pushBranch = pushBranch;
 async function createPullRequest(branchName, baseName) {
     const title = `Merge ${branchName} into ${baseName}`;
-    const output = await exec.getExecOutput('gh', [
-        'pr',
-        'create',
-        '--base',
-        baseName,
-        '--title',
-        title,
-        // TODO: Add info here?
-        '--body',
-        ''
-    ]);
+    const formattedCommitList = formatCommits(await getCommitList(branchName, baseName));
+    const options = {
+        input: Buffer.from(formattedCommitList)
+    };
+    const output = await exec.getExecOutput('gh', ['pr', 'create', '--base', baseName, '--title', title, '--body-file', '-'], options);
     const matches = output.stdout.match(/(https:\/\/github\.com\/.+\/pull\/(\d+))$/m);
     if (!matches) {
         throw new Error('Pull request created, but could not match pull request URL');
@@ -26035,6 +26029,34 @@ async function hasNewCommits(branchName, baseName) {
     return !regex.test(output.stdout);
 }
 exports.hasNewCommits = hasNewCommits;
+async function getCommitList(branchName, baseName) {
+    const output = await exec.getExecOutput('git', [
+        'log',
+        '--format="%h %s"',
+        `${baseName}..${branchName}`
+    ]);
+    const outputLines = output.stdout.split('\n');
+    const results = [];
+    for (const outputLine of outputLines) {
+        const matches = outputLine.match(/^([^ ]+) (.*)$/);
+        if (!matches) {
+            continue;
+        }
+        results.push({
+            hash: matches[1],
+            subject: matches[2]
+        });
+    }
+    return results;
+}
+function formatCommits(commits) {
+    if (!commits.length) {
+        return '';
+    }
+    return commits
+        .map((commit) => `* ${commit.subject}: ${commit.hash}`)
+        .join('\n');
+}
 
 
 /***/ }),
@@ -26123,7 +26145,7 @@ async function run() {
         catch (error) {
             let message = `Could not create new branch "${newBranchName}"`;
             if (error instanceof Error) {
-                message += `: error.message`;
+                message += `: ${error.message}`;
             }
             core.setFailed(message);
             core.summary.addRaw(`:x: ${message}`, true);
@@ -26135,7 +26157,7 @@ async function run() {
         catch (error) {
             let message = `Could not push new branch "${newBranchName}"`;
             if (error instanceof Error) {
-                message += `: error.message`;
+                message += `: ${error.message}`;
             }
             core.setFailed(message);
             core.summary.addRaw(`:x: ${message}`, true);
