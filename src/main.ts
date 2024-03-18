@@ -79,7 +79,7 @@ export async function run(): Promise<void> {
     } catch (error) {
       let message = `Could not create new branch "${newBranchName}"`
       if (error instanceof Error) {
-        message += `: error.message`
+        message += `: ${error.message}`
       }
 
       core.setFailed(message)
@@ -92,7 +92,7 @@ export async function run(): Promise<void> {
     } catch (error) {
       let message = `Could not push new branch "${newBranchName}"`
       if (error instanceof Error) {
-        message += `: error.message`
+        message += `: ${error.message}`
       }
 
       core.setFailed(message)
