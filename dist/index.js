@@ -26038,7 +26038,7 @@ async function getCommitList(branchName, baseName) {
     const outputLines = output.stdout.split('\n');
     const results = [];
     for (const outputLine of outputLines) {
-        const matches = outputLine.match(/^([^ ]+) (.*)$/);
+        const matches = outputLine.match(/^"?([^ ]+) (.*?)"?$/);
         if (!matches) {
             continue;
         }

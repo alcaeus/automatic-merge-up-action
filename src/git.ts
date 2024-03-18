@@ -119,7 +119,7 @@ async function getCommitList(
 
   const results: CommitList = []
   for (const outputLine of outputLines) {
-    const matches = outputLine.match(/^([^ ]+) (.*)$/)
+    const matches = outputLine.match(/^"?([^ ]+) (.*?)"?$/)
     if (!matches) {
       continue
     }
