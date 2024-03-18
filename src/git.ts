@@ -112,7 +112,7 @@ async function getCommitList(
   const output: ExecOutput = await exec.getExecOutput('git', [
     'log',
     '--format="%h %s"',
-    `${baseName}..${branchName}`
+    `origin/${baseName}..origin/${branchName}`
   ])
 
   const outputLines = output.stdout.split('\n')
