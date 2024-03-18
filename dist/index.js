@@ -26003,8 +26003,30 @@ exports.pushBranch = pushBranch;
 async function createPullRequest(branchName, baseName) {
     const title = `Merge ${branchName} into ${baseName}`;
     const formattedCommitList = formatCommits(await getCommitList(branchName, baseName));
+    const bodyText = `
+Merge new changes from ${branchName} into ${baseName}.
+
+<h2>Commits</h2>
+${formattedCommitList}
+
+<details>
+  <summary><h2>Resolving conflicts</h2></summary>
+  To resolve any conflicts, check out the temporary branch and run the following command:
+
+    git merge ${baseName}
+</details>
+
+<details>
+  <summary><h2>Ignoring changes</h2></summary>
+  To ignore from the remote branch, first reset the temporary branch to ${baseName} and manually merge using the \`ours\` merge strategy:
+
+    git reset --hard ${baseName}
+    git merge --strategy=ours ${branchName}
+
+  Then, push the temporary branch to upate the pull request.
+</details>`;
     const options = {
-        input: Buffer.from(formattedCommitList)
+        input: Buffer.from(bodyText)
     };
     const output = await exec.getExecOutput('gh', ['pr', 'create', '--base', baseName, '--title', title, '--body-file', '-'], options);
     const matches = output.stdout.match(/(https:\/\/github\.com\/.+\/pull\/(\d+))$/m);
@@ -26053,9 +26075,10 @@ function formatCommits(commits) {
     if (!commits.length) {
         return '';
     }
-    return commits
-        .map((commit) => `* ${commit.subject}: ${commit.hash}`)
+    const commitList = commits
+        .map((commit) => `<li>${commit.subject}: ${commit.hash}</li>`)
         .join('\n');
+    return `<ul>${commitList}</ul>`;
 }
 
 
