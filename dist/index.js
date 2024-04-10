@@ -26205,7 +26205,7 @@ async function run() {
         }
         // Enable auto-merge if requested
         if (enableAutoMerge) {
-            git.enableAutoMerge(pullRequest.id);
+            await core.group('Enable auto-merge', async () => git.enableAutoMerge(pullRequest.id));
         }
         core.setOutput('pullRequestUrl', pullRequest.url);
         core.setOutput('branchName', newBranchName);

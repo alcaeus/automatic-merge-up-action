@@ -113,7 +113,9 @@ export async function run(): Promise<void> {
 
     // Enable auto-merge if requested
     if (enableAutoMerge) {
-      git.enableAutoMerge(pullRequest.id)
+      await core.group('Enable auto-merge', async () =>
+        git.enableAutoMerge(pullRequest.id)
+      )
     }
 
     core.setOutput('pullRequestUrl', pullRequest.url)
