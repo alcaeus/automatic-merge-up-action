@@ -25965,7 +25965,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.hasNewCommits = exports.createPullRequest = exports.pushBranch = exports.createBranch = exports.getNextBranch = void 0;
+exports.enableAutoMerge = exports.hasNewCommits = exports.createPullRequest = exports.pushBranch = exports.createBranch = exports.getNextBranch = void 0;
 const exec = __importStar(__nccwpck_require__(1514));
 const regex_1 = __nccwpck_require__(5633);
 async function branchExists(branchName) {
@@ -26051,6 +26051,15 @@ async function hasNewCommits(branchName, baseName) {
     return !regex.test(output.stdout);
 }
 exports.hasNewCommits = hasNewCommits;
+async function enableAutoMerge(pullRequestId) {
+    await exec.exec('gh', [
+        'merge',
+        pullRequestId.toString(),
+        '--auto', // Enable auto-merge
+        '-m' // Use merge commit strategy
+    ]);
+}
+exports.enableAutoMerge = enableAutoMerge;
 async function getCommitList(branchName, baseName) {
     const output = await exec.getExecOutput('git', [
         'log',
@@ -26126,6 +26135,7 @@ async function run() {
         const currentBranch = core.getInput('ref');
         const branchNamePattern = core.getInput('branchNamePattern');
         const branchPatternRegex = (0, regex_1.createRegexFromPattern)(branchNamePattern);
+        const enableAutoMerge = core.getInput('enableAutoMerge') !== '';
         const branches = currentBranch.match(branchPatternRegex);
         if (!branches) {
             const message = `Ref name "${currentBranch}" does not match branch name pattern "${branchNamePattern}".`;
@@ -26192,6 +26202,10 @@ async function run() {
             core.setFailed(message);
             core.summary.addRaw(`:x: ${message}`, true);
             return;
+        }
+        // Enable auto-merge if requested
+        if (enableAutoMerge) {
+            git.enableAutoMerge(pullRequest.id);
         }
         core.setOutput('pullRequestUrl', pullRequest.url);
         core.setOutput('branchName', newBranchName);
