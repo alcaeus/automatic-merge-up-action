@@ -26053,6 +26053,7 @@ async function hasNewCommits(branchName, baseName) {
 exports.hasNewCommits = hasNewCommits;
 async function enableAutoMerge(pullRequestId) {
     await exec.exec('gh', [
+        'pr',
         'merge',
         pullRequestId.toString(),
         '--auto', // Enable auto-merge

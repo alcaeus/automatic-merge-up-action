@@ -130,6 +130,7 @@ export async function hasNewCommits(
 
 export async function enableAutoMerge(pullRequestId: number): Promise<void> {
   await exec.exec('gh', [
+    'pr',
     'merge',
     pullRequestId.toString(),
     '--auto', // Enable auto-merge
