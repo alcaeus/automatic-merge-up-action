@@ -17,6 +17,9 @@ inputs:
   fallbackBranch:
     description: 'A branch to fall back on if no next branch matching the pattern was found'
     required: false
+  enableAutoMerge:
+    description: 'If non-empty, enables auto-merge on the pull request'
+    required: false
 
 outputs:
   branchName:

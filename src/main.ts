@@ -11,6 +11,7 @@ export async function run(): Promise<void> {
     const currentBranch: string = core.getInput('ref')
     const branchNamePattern: string = core.getInput('branchNamePattern')
     const branchPatternRegex: RegExp = createRegexFromPattern(branchNamePattern)
+    const enableAutoMerge: boolean = core.getInput('enableAutoMerge') !== ''
 
     const branches: RegExpMatchArray | null =
       currentBranch.match(branchPatternRegex)
@@ -108,6 +109,13 @@ export async function run(): Promise<void> {
       core.setFailed(message)
       core.summary.addRaw(`:x: ${message}`, true)
       return
+    }
+
+    // Enable auto-merge if requested
+    if (enableAutoMerge) {
+      await core.group('Enable auto-merge', async () =>
+        git.enableAutoMerge(pullRequest.id)
+      )
     }
 
     core.setOutput('pullRequestUrl', pullRequest.url)

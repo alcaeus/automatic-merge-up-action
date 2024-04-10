@@ -128,6 +128,16 @@ export async function hasNewCommits(
   return !regex.test(output.stdout)
 }
 
+export async function enableAutoMerge(pullRequestId: number): Promise<void> {
+  await exec.exec('gh', [
+    'pr',
+    'merge',
+    pullRequestId.toString(),
+    '--auto', // Enable auto-merge
+    '-m' // Use merge commit strategy
+  ])
+}
+
 async function getCommitList(
   branchName: string,
   baseName: string
