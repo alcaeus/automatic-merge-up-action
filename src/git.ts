@@ -14,7 +14,7 @@ export type PullRequestResult = {
   url: string
 }
 
-async function branchExists(branchName: string): Promise<boolean> {
+export async function branchExists(branchName: string): Promise<boolean> {
   const output: ExecOutput = await exec.getExecOutput('git', [
     'branch',
     '--list',
@@ -23,27 +23,6 @@ async function branchExists(branchName: string): Promise<boolean> {
   ])
 
   return output.stdout.includes(branchName)
-}
-
-export async function getNextBranch(
-  branchNamePattern: string,
-  major: number,
-  minor: number
-): Promise<string | null> {
-  const nextMinorBranch: string = branchNamePattern
-    .replace('<major>', major.toString())
-    .replace('<minor>', (minor + 1).toString())
-  const nextMajorBranch: string = branchNamePattern
-    .replace('<major>', (major + 1).toString())
-    .replace('<minor>', '0')
-
-  await exec.exec('git', ['branch', '--list', '-r'])
-
-  return (await branchExists(nextMinorBranch))
-    ? nextMinorBranch
-    : (await branchExists(nextMajorBranch))
-      ? nextMajorBranch
-      : null
 }
 
 export async function createBranch(branchName: string): Promise<void> {

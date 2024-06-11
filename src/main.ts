@@ -1,6 +1,7 @@
 import * as core from '@actions/core'
 import * as git from './git'
-import { Inputs } from "./inputs";
+import { Inputs } from './inputs'
+import { Branch } from './branch'
 
 /**
  * The main function for the action.
@@ -9,56 +10,33 @@ import { Inputs } from "./inputs";
 export async function run(): Promise<void> {
   try {
     const inputs = Inputs.fromActionsInput()
-
-    const branches: RegExpMatchArray | null =
-      inputs.currentBranch.match(inputs.branchPatternRegex)
-    if (!branches) {
-      const message = `Ref name "${inputs.currentBranch}" does not match branch name pattern "${inputs.branchNamePattern}".`
-      core.info(message)
-      core.summary.addRaw(`:no-entry: ${message}`, true)
-      return
-    }
-
-    const majorVersion = Number(branches[1])
-    const minorVersion = Number(branches[2])
-
-    core.debug(
-      `Matched the following versions in branch name "${inputs.currentBranch}" with pattern "${inputs.branchPatternRegex}":`
-    )
-    core.debug(`Major version: ${majorVersion}`)
-    core.debug(`Minor version: ${minorVersion}`)
+    let branch: Branch
+    let nextBranchName: string
 
     // Determine the next branch to merge up to
-    const nextGitBranchName: string | null = await core.group(
-      'Determine next branch',
-      async () =>
-        await git.getNextBranch(
-          inputs.branchNamePattern,
-          Number(majorVersion),
-          Number(minorVersion)
-        )
-    )
+    try {
+      branch = new Branch(inputs.currentBranch, inputs.branchNamePattern)
 
-    let nextBranchName: string
-    if (nextGitBranchName === null) {
-      const fallbackBranch = inputs.fallbackBranch
+      core.debug(
+        `Matched the following versions in branch name "${branch.name}" with pattern "${branch.branchNamePattern}":`
+      )
+      core.debug(`Major version: ${branch.majorVersion}`)
+      core.debug(`Minor version: ${branch.minorVersion}`)
 
-      if (!fallbackBranch) {
-        const message = `Ref name "${inputs.currentBranch}" does not have a next branch or fallback branch`
-        core.info(message)
-        core.summary.addRaw(`:no-entry: ${message}`, true)
-        return
-      }
+      nextBranchName = await branch.getNextBranchName(inputs.fallbackBranch)
+    } catch (error) {
+      const message = (error as Error).message
+      core.info(message)
+      core.summary.addRaw(`:no-entry: ${message}`, true)
 
-      nextBranchName = fallbackBranch
-    } else {
-      nextBranchName = nextGitBranchName
+      return
     }
 
     if (
       !(await core.group(
         'Check whether branch requires merge up',
-        async () => await git.hasNewCommits(inputs.currentBranch, nextBranchName)
+        async () =>
+          await git.hasNewCommits(inputs.currentBranch, nextBranchName)
       ))
     ) {
       const message = `No new commits in "${inputs.currentBranch}" to merge up`

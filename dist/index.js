@@ -25936,6 +25936,61 @@ exports["default"] = _default;
 
 /***/ }),
 
+/***/ 1674:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Branch = void 0;
+const regex_1 = __nccwpck_require__(5633);
+const git_1 = __nccwpck_require__(6350);
+class Branch {
+    name;
+    majorVersion;
+    minorVersion;
+    branchNamePattern;
+    constructor(name, branchNamePattern) {
+        this.name = name;
+        this.branchNamePattern = branchNamePattern;
+        const branchPatternRegex = (0, regex_1.createRegexFromPattern)(branchNamePattern);
+        const versions = name.match(branchPatternRegex);
+        if (!versions) {
+            throw new Error(`Ref name "${name}" does not match branch name pattern "${branchNamePattern}".`);
+        }
+        this.majorVersion = Number(versions[1]);
+        this.minorVersion = Number(versions[2]);
+    }
+    getNextMajorBranch() {
+        return this.branchNamePattern
+            .replace('<major>', (this.majorVersion + 1).toString())
+            .replace('<minor>', '0');
+    }
+    getNextMinorBranch() {
+        return this.branchNamePattern
+            .replace('<major>', this.majorVersion.toString())
+            .replace('<minor>', (this.minorVersion + 1).toString());
+    }
+    async getNextBranchName(fallbackBranch) {
+        const nextMajorBranch = this.getNextMajorBranch();
+        const nextMinorBranch = this.getNextMinorBranch();
+        if (await (0, git_1.branchExists)(nextMinorBranch)) {
+            return nextMinorBranch;
+        }
+        if (await (0, git_1.branchExists)(nextMajorBranch)) {
+            return nextMajorBranch;
+        }
+        if (fallbackBranch) {
+            return fallbackBranch;
+        }
+        throw new Error(`Ref name "${this.name}" does not have a next branch or fallback branch`);
+    }
+}
+exports.Branch = Branch;
+
+
+/***/ }),
+
 /***/ 6350:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -25965,7 +26020,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.enableAutoMerge = exports.hasNewCommits = exports.createPullRequest = exports.pushBranch = exports.createBranch = exports.getNextBranch = void 0;
+exports.enableAutoMerge = exports.hasNewCommits = exports.createPullRequest = exports.pushBranch = exports.createBranch = exports.branchExists = void 0;
 const exec = __importStar(__nccwpck_require__(1514));
 const regex_1 = __nccwpck_require__(5633);
 async function branchExists(branchName) {
@@ -25977,21 +26032,7 @@ async function branchExists(branchName) {
     ]);
     return output.stdout.includes(branchName);
 }
-async function getNextBranch(branchNamePattern, major, minor) {
-    const nextMinorBranch = branchNamePattern
-        .replace('<major>', major.toString())
-        .replace('<minor>', (minor + 1).toString());
-    const nextMajorBranch = branchNamePattern
-        .replace('<major>', (major + 1).toString())
-        .replace('<minor>', '0');
-    await exec.exec('git', ['branch', '--list', '-r']);
-    return (await branchExists(nextMinorBranch))
-        ? nextMinorBranch
-        : (await branchExists(nextMajorBranch))
-            ? nextMajorBranch
-            : null;
-}
-exports.getNextBranch = getNextBranch;
+exports.branchExists = branchExists;
 async function createBranch(branchName) {
     await exec.getExecOutput('git', ['checkout', '-b', branchName]);
 }
@@ -26094,6 +26135,57 @@ function formatCommits(commits) {
 
 /***/ }),
 
+/***/ 7063:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Inputs = void 0;
+const core = __importStar(__nccwpck_require__(2186));
+class Inputs {
+    currentBranch;
+    branchNamePattern;
+    fallbackBranch;
+    enableAutoMerge;
+    constructor(currentBranch, branchNamePattern, fallbackBranch, enableAutoMerge) {
+        this.currentBranch = currentBranch;
+        this.branchNamePattern = branchNamePattern;
+        this.fallbackBranch = fallbackBranch;
+        this.enableAutoMerge = enableAutoMerge;
+    }
+    static fromActionsInput() {
+        return new Inputs(core.getInput('ref'), core.getInput('branchNamePattern'), core.getInput('fallbackBranch'), core.getBooleanInput('enableAutoMerge'));
+    }
+}
+exports.Inputs = Inputs;
+
+
+/***/ }),
+
 /***/ 399:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -26125,54 +26217,40 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.run = void 0;
 const core = __importStar(__nccwpck_require__(2186));
-const regex_1 = __nccwpck_require__(5633);
 const git = __importStar(__nccwpck_require__(6350));
+const inputs_1 = __nccwpck_require__(7063);
+const branch_1 = __nccwpck_require__(1674);
 /**
  * The main function for the action.
  * @returns {Promise<void>} Resolves when the action is complete.
  */
 async function run() {
     try {
-        const currentBranch = core.getInput('ref');
-        const branchNamePattern = core.getInput('branchNamePattern');
-        const branchPatternRegex = (0, regex_1.createRegexFromPattern)(branchNamePattern);
-        const enableAutoMerge = core.getInput('enableAutoMerge') !== '';
-        const branches = currentBranch.match(branchPatternRegex);
-        if (!branches) {
-            const message = `Ref name "${currentBranch}" does not match branch name pattern "${branchNamePattern}".`;
+        const inputs = inputs_1.Inputs.fromActionsInput();
+        let branch;
+        let nextBranchName;
+        // Determine the next branch to merge up to
+        try {
+            branch = new branch_1.Branch(inputs.currentBranch, inputs.branchNamePattern);
+            core.debug(`Matched the following versions in branch name "${branch.name}" with pattern "${branch.branchNamePattern}":`);
+            core.debug(`Major version: ${branch.majorVersion}`);
+            core.debug(`Minor version: ${branch.minorVersion}`);
+            nextBranchName = await branch.getNextBranchName(inputs.fallbackBranch);
+        }
+        catch (error) {
+            const message = error.message;
             core.info(message);
             core.summary.addRaw(`:no-entry: ${message}`, true);
             return;
         }
-        const majorVersion = Number(branches[1]);
-        const minorVersion = Number(branches[2]);
-        core.debug(`Matched the following versions in branch name "${currentBranch}" with pattern "${branchPatternRegex}":`);
-        core.debug(`Major version: ${majorVersion}`);
-        core.debug(`Minor version: ${minorVersion}`);
-        // Determine the next branch to merge up to
-        const nextGitBranchName = await core.group('Determine next branch', async () => await git.getNextBranch(branchNamePattern, Number(majorVersion), Number(minorVersion)));
-        let nextBranchName;
-        if (nextGitBranchName === null) {
-            const fallbackBranch = core.getInput('fallbackBranch');
-            if (!fallbackBranch) {
-                const message = `Ref name "${currentBranch}" does not have a next branch or fallback branch`;
-                core.info(message);
-                core.summary.addRaw(`:no-entry: ${message}`, true);
-                return;
-            }
-            nextBranchName = fallbackBranch;
-        }
-        else {
-            nextBranchName = nextGitBranchName;
-        }
-        if (!(await core.group('Check whether branch requires merge up', async () => await git.hasNewCommits(currentBranch, nextBranchName)))) {
-            const message = `No new commits in "${currentBranch}" to merge up`;
+        if (!(await core.group('Check whether branch requires merge up', async () => await git.hasNewCommits(inputs.currentBranch, nextBranchName)))) {
+            const message = `No new commits in "${inputs.currentBranch}" to merge up`;
             core.info(message);
             core.summary.addRaw(`:no-entry: ${message}`, true);
             return;
         }
         // Generate a new branch-name upmerge-branch: "merge-<current-branch>-into-<next-branch>-<unique-token>:
-        const newBranchName = `merge-${currentBranch}-into-${nextBranchName}-${Date.now()}`;
+        const newBranchName = `merge-${inputs.currentBranch}-into-${nextBranchName}-${Date.now()}`;
         try {
             await core.group('Create new branch', async () => await git.createBranch(newBranchName));
         }
@@ -26197,7 +26275,7 @@ async function run() {
             core.summary.addRaw(`:x: ${message}`, true);
             return;
         }
-        const pullRequest = await core.group('Create pull request', async () => git.createPullRequest(currentBranch, nextBranchName));
+        const pullRequest = await core.group('Create pull request', async () => git.createPullRequest(inputs.currentBranch, nextBranchName));
         if (!pullRequest) {
             const message = 'Could not create new pull request';
             core.setFailed(message);
@@ -26205,7 +26283,7 @@ async function run() {
             return;
         }
         // Enable auto-merge if requested
-        if (enableAutoMerge) {
+        if (inputs.enableAutoMerge) {
             await core.group('Enable auto-merge', async () => git.enableAutoMerge(pullRequest.id));
         }
         core.setOutput('pullRequestUrl', pullRequest.url);

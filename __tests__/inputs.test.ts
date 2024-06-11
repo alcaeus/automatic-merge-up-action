@@ -2,8 +2,8 @@
  * Unit tests for input handling
  */
 
-import {Inputs} from "../src/inputs";
-import * as core from "@actions/core";
+import { Inputs } from '../src/inputs'
+import * as core from '@actions/core'
 
 let getInputMock: jest.SpiedFunction<typeof core.getInput>
 let getBooleanInputMock: jest.SpiedFunction<typeof core.getBooleanInput>
@@ -14,7 +14,6 @@ describe('Inputs', () => {
 
     expect(inputs.currentBranch).toStrictEqual('v1.19')
     expect(inputs.branchNamePattern).toStrictEqual('v<major>.<minor>')
-    expect(inputs.branchPatternRegex).toStrictEqual(new RegExp('^v([0-9]+)\\.([0-9]+)$'))
     expect(inputs.fallbackBranch).toStrictEqual('main')
     expect(inputs.enableAutoMerge).toStrictEqual(true)
   })
@@ -34,7 +33,9 @@ describe('Inputs', () => {
       }
     })
 
-    getBooleanInputMock = jest.spyOn(core, 'getBooleanInput').mockImplementation()
+    getBooleanInputMock = jest
+      .spyOn(core, 'getBooleanInput')
+      .mockImplementation()
     getBooleanInputMock.mockImplementation(name => {
       switch (name) {
         case 'enableAutoMerge':
@@ -48,7 +49,6 @@ describe('Inputs', () => {
 
     expect(inputs.currentBranch).toStrictEqual('v1.19')
     expect(inputs.branchNamePattern).toStrictEqual('v<major>.<minor>')
-    expect(inputs.branchPatternRegex).toStrictEqual(new RegExp('^v([0-9]+)\\.([0-9]+)$'))
     expect(inputs.enableAutoMerge).toStrictEqual(true)
     expect(inputs.fallbackBranch).toStrictEqual('main')
 
@@ -71,7 +71,9 @@ describe('Inputs', () => {
       }
     })
 
-    getBooleanInputMock = jest.spyOn(core, 'getBooleanInput').mockImplementation()
+    getBooleanInputMock = jest
+      .spyOn(core, 'getBooleanInput')
+      .mockImplementation()
     getBooleanInputMock.mockImplementation(name => {
       switch (name) {
         case 'enableAutoMerge':
