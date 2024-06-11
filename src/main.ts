@@ -1,6 +1,6 @@
 import * as core from '@actions/core'
-import { createRegexFromPattern } from './regex'
 import * as git from './git'
+import { Inputs } from "./inputs";
 
 /**
  * The main function for the action.
@@ -8,15 +8,12 @@ import * as git from './git'
  */
 export async function run(): Promise<void> {
   try {
-    const currentBranch: string = core.getInput('ref')
-    const branchNamePattern: string = core.getInput('branchNamePattern')
-    const branchPatternRegex: RegExp = createRegexFromPattern(branchNamePattern)
-    const enableAutoMerge: boolean = core.getInput('enableAutoMerge') !== ''
+    const inputs = Inputs.fromActionsInput()
 
     const branches: RegExpMatchArray | null =
-      currentBranch.match(branchPatternRegex)
+      inputs.currentBranch.match(inputs.branchPatternRegex)
     if (!branches) {
-      const message = `Ref name "${currentBranch}" does not match branch name pattern "${branchNamePattern}".`
+      const message = `Ref name "${inputs.currentBranch}" does not match branch name pattern "${inputs.branchNamePattern}".`
       core.info(message)
       core.summary.addRaw(`:no-entry: ${message}`, true)
       return
@@ -26,7 +23,7 @@ export async function run(): Promise<void> {
     const minorVersion = Number(branches[2])
 
     core.debug(
-      `Matched the following versions in branch name "${currentBranch}" with pattern "${branchPatternRegex}":`
+      `Matched the following versions in branch name "${inputs.currentBranch}" with pattern "${inputs.branchPatternRegex}":`
     )
     core.debug(`Major version: ${majorVersion}`)
     core.debug(`Minor version: ${minorVersion}`)
@@ -36,7 +33,7 @@ export async function run(): Promise<void> {
       'Determine next branch',
       async () =>
         await git.getNextBranch(
-          branchNamePattern,
+          inputs.branchNamePattern,
           Number(majorVersion),
           Number(minorVersion)
         )
@@ -44,10 +41,10 @@ export async function run(): Promise<void> {
 
     let nextBranchName: string
     if (nextGitBranchName === null) {
-      const fallbackBranch = core.getInput('fallbackBranch')
+      const fallbackBranch = inputs.fallbackBranch
 
       if (!fallbackBranch) {
-        const message = `Ref name "${currentBranch}" does not have a next branch or fallback branch`
+        const message = `Ref name "${inputs.currentBranch}" does not have a next branch or fallback branch`
         core.info(message)
         core.summary.addRaw(`:no-entry: ${message}`, true)
         return
@@ -61,17 +58,17 @@ export async function run(): Promise<void> {
     if (
       !(await core.group(
         'Check whether branch requires merge up',
-        async () => await git.hasNewCommits(currentBranch, nextBranchName)
+        async () => await git.hasNewCommits(inputs.currentBranch, nextBranchName)
       ))
     ) {
-      const message = `No new commits in "${currentBranch}" to merge up`
+      const message = `No new commits in "${inputs.currentBranch}" to merge up`
       core.info(message)
       core.summary.addRaw(`:no-entry: ${message}`, true)
       return
     }
 
     // Generate a new branch-name upmerge-branch: "merge-<current-branch>-into-<next-branch>-<unique-token>:
-    const newBranchName = `merge-${currentBranch}-into-${nextBranchName}-${Date.now()}`
+    const newBranchName = `merge-${inputs.currentBranch}-into-${nextBranchName}-${Date.now()}`
     try {
       await core.group(
         'Create new branch',
@@ -102,7 +99,7 @@ export async function run(): Promise<void> {
     }
 
     const pullRequest = await core.group('Create pull request', async () =>
-      git.createPullRequest(currentBranch, nextBranchName)
+      git.createPullRequest(inputs.currentBranch, nextBranchName)
     )
     if (!pullRequest) {
       const message = 'Could not create new pull request'
@@ -112,7 +109,7 @@ export async function run(): Promise<void> {
     }
 
     // Enable auto-merge if requested
-    if (enableAutoMerge) {
+    if (inputs.enableAutoMerge) {
       await core.group('Enable auto-merge', async () =>
         git.enableAutoMerge(pullRequest.id)
       )

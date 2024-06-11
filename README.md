@@ -110,3 +110,11 @@ version (e.g. `main`), the `fallbackBranch` option can be used to specify this
 branch name. If no versioned branch was found, the pull request will target this
 fallback branch instead. The "Branch Selection" chapter above explains the order
 of operations.
+
+### enableAutoMerge (optional)
+
+When this option is enabled (using a truish value), the resulting PR will have
+auto-merge enabled. Note that in order for this to work, the auto-merge
+functionality has to be enabled on the repository, and the "merge" merge
+strategy has to be available. Automatic merges are always done using the "merge"
+strategy.
