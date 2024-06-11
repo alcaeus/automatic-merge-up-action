@@ -1,7 +1,3 @@
-/**
- * Unit tests for branch logic
- */
-
 import { Branch } from '../src/branch'
 import * as git from '../src/git'
 

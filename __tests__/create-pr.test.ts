@@ -1,16 +1,18 @@
 /**
- * Unit tests for the action's entrypoint, src/index.ts
+ * Unit tests for the action's entrypoint, src/create-pr.ts
  */
 
 import * as main from '../src/main'
 
 // Mock the action's entrypoint
-const runMock = jest.spyOn(main, 'run').mockImplementation()
+const runMock = jest
+  .spyOn(main, 'createMergeUpPullRequest')
+  .mockImplementation()
 
-describe('index', () => {
+describe('create-pr', () => {
   it('calls run when imported', async () => {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    require('../src/index')
+    require('../src/create-pr')
 
     expect(runMock).toHaveBeenCalled()
   })

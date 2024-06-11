@@ -1,7 +1,3 @@
-/**
- * Unit tests for input handling
- */
-
 import { Inputs } from '../src/inputs'
 import * as core from '@actions/core'
 
