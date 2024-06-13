@@ -18,12 +18,12 @@ export class Inputs {
     this.enableAutoMerge = enableAutoMerge
   }
 
-  static fromActionsInput(): Inputs {
+  static fromActionsInput(includeAutoMergeOption = true): Inputs {
     return new Inputs(
       core.getInput('ref'),
       core.getInput('branchNamePattern'),
       core.getInput('fallbackBranch'),
-      core.getBooleanInput('enableAutoMerge')
+      includeAutoMergeOption ? core.getBooleanInput('enableAutoMerge') : false
     )
   }
 }

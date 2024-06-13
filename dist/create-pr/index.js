@@ -26177,8 +26177,8 @@ class Inputs {
         this.fallbackBranch = fallbackBranch;
         this.enableAutoMerge = enableAutoMerge;
     }
-    static fromActionsInput() {
-        return new Inputs(core.getInput('ref'), core.getInput('branchNamePattern'), core.getInput('fallbackBranch'), core.getBooleanInput('enableAutoMerge'));
+    static fromActionsInput(includeAutoMergeOption = true) {
+        return new Inputs(core.getInput('ref'), core.getInput('branchNamePattern'), core.getInput('fallbackBranch'), includeAutoMergeOption ? core.getBooleanInput('enableAutoMerge') : false);
     }
 }
 exports.Inputs = Inputs;
@@ -26305,7 +26305,7 @@ async function createMergeUpPullRequest() {
 }
 exports.createMergeUpPullRequest = createMergeUpPullRequest;
 async function getNextBranch() {
-    const inputs = inputs_1.Inputs.fromActionsInput();
+    const inputs = inputs_1.Inputs.fromActionsInput(false);
     let nextBranchName;
     // Determine the next branch to merge up to
     try {

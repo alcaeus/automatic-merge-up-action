@@ -108,7 +108,7 @@ export async function createMergeUpPullRequest(): Promise<void> {
 }
 
 export async function getNextBranch(): Promise<void> {
-  const inputs = Inputs.fromActionsInput()
+  const inputs = Inputs.fromActionsInput(false)
   let nextBranchName: string
 
   // Determine the next branch to merge up to

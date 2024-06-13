@@ -76,14 +76,9 @@ describe('main', () => {
           }
         })
 
-        jest.spyOn(core, 'getBooleanInput').mockImplementation(name => {
-          switch (name) {
-            case 'enableAutoMerge':
-              return true
-            default:
-              return false
-          }
-        })
+        const getBooleanInputMock = jest
+          .spyOn(core, 'getBooleanInput')
+          .mockImplementation()
 
         jest
           .spyOn(git, 'branchExists')
@@ -94,6 +89,8 @@ describe('main', () => {
         const setOutputMock = jest.spyOn(core, 'setOutput').mockImplementation()
 
         await main.getNextBranch()
+
+        expect(getBooleanInputMock).toHaveBeenCalledTimes(0)
 
         expect(setOutputMock).toHaveBeenNthCalledWith(
           1,
