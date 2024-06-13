@@ -26215,7 +26215,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.run = void 0;
+exports.getNextBranch = exports.createMergeUpPullRequest = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const git = __importStar(__nccwpck_require__(6350));
 const inputs_1 = __nccwpck_require__(7063);
@@ -26224,18 +26224,13 @@ const branch_1 = __nccwpck_require__(1674);
  * The main function for the action.
  * @returns {Promise<void>} Resolves when the action is complete.
  */
-async function run() {
+async function createMergeUpPullRequest() {
     try {
         const inputs = inputs_1.Inputs.fromActionsInput();
-        let branch;
         let nextBranchName;
         // Determine the next branch to merge up to
         try {
-            branch = new branch_1.Branch(inputs.currentBranch, inputs.branchNamePattern);
-            core.debug(`Matched the following versions in branch name "${branch.name}" with pattern "${branch.branchNamePattern}":`);
-            core.debug(`Major version: ${branch.majorVersion}`);
-            core.debug(`Minor version: ${branch.minorVersion}`);
-            nextBranchName = await branch.getNextBranchName(inputs.fallbackBranch);
+            nextBranchName = await getNextBranchName(inputs);
         }
         catch (error) {
             const message = error.message;
@@ -26308,7 +26303,30 @@ async function run() {
         // Ignore errors when writing summary
     }
 }
-exports.run = run;
+exports.createMergeUpPullRequest = createMergeUpPullRequest;
+async function getNextBranch() {
+    const inputs = inputs_1.Inputs.fromActionsInput();
+    let nextBranchName;
+    // Determine the next branch to merge up to
+    try {
+        nextBranchName = await getNextBranchName(inputs);
+    }
+    catch (error) {
+        core.setOutput('hasNextBranch', false);
+        core.setOutput('branchName', null);
+        return;
+    }
+    core.setOutput('hasNextBranch', true);
+    core.setOutput('branchName', nextBranchName);
+}
+exports.getNextBranch = getNextBranch;
+async function getNextBranchName(inputs) {
+    const branch = new branch_1.Branch(inputs.currentBranch, inputs.branchNamePattern);
+    core.debug(`Matched the following versions in branch name "${branch.name}" with pattern "${branch.branchNamePattern}":`);
+    core.debug(`Major version: ${branch.majorVersion}`);
+    core.debug(`Minor version: ${branch.minorVersion}`);
+    return branch.getNextBranchName(inputs.fallbackBranch);
+}
 
 
 /***/ }),
@@ -28246,11 +28264,11 @@ var exports = __webpack_exports__;
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 /**
- * The entrypoint for the action.
+ * The entrypoint for the create-pr action.
  */
 const main_1 = __nccwpck_require__(399);
 // eslint-disable-next-line @typescript-eslint/no-floating-promises
-(0, main_1.run)();
+(0, main_1.createMergeUpPullRequest)();
 
 })();
 

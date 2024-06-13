@@ -10,20 +10,11 @@ import { Branch } from './branch'
 export async function createMergeUpPullRequest(): Promise<void> {
   try {
     const inputs = Inputs.fromActionsInput()
-    let branch: Branch
     let nextBranchName: string
 
     // Determine the next branch to merge up to
     try {
-      branch = new Branch(inputs.currentBranch, inputs.branchNamePattern)
-
-      core.debug(
-        `Matched the following versions in branch name "${branch.name}" with pattern "${branch.branchNamePattern}":`
-      )
-      core.debug(`Major version: ${branch.majorVersion}`)
-      core.debug(`Minor version: ${branch.minorVersion}`)
-
-      nextBranchName = await branch.getNextBranchName(inputs.fallbackBranch)
+      nextBranchName = await getNextBranchName(inputs)
     } catch (error) {
       const message = (error as Error).message
       core.info(message)
@@ -114,4 +105,34 @@ export async function createMergeUpPullRequest(): Promise<void> {
   } catch (error) {
     // Ignore errors when writing summary
   }
+}
+
+export async function getNextBranch(): Promise<void> {
+  const inputs = Inputs.fromActionsInput()
+  let nextBranchName: string
+
+  // Determine the next branch to merge up to
+  try {
+    nextBranchName = await getNextBranchName(inputs)
+  } catch (error) {
+    core.setOutput('hasNextBranch', false)
+    core.setOutput('branchName', null)
+
+    return
+  }
+
+  core.setOutput('hasNextBranch', true)
+  core.setOutput('branchName', nextBranchName)
+}
+
+async function getNextBranchName(inputs: Inputs): Promise<string> {
+  const branch = new Branch(inputs.currentBranch, inputs.branchNamePattern)
+
+  core.debug(
+    `Matched the following versions in branch name "${branch.name}" with pattern "${branch.branchNamePattern}":`
+  )
+  core.debug(`Major version: ${branch.majorVersion}`)
+  core.debug(`Minor version: ${branch.minorVersion}`)
+
+  return branch.getNextBranchName(inputs.fallbackBranch)
 }
