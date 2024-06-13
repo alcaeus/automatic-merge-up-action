@@ -95,7 +95,7 @@ export async function createMergeUpPullRequest(): Promise<void> {
   } catch (error) {
     // Fail the workflow run if an error occurs
     if (error instanceof Error) {
-      core.summary.clear()
+      await core.summary.clear()
       core.setFailed(error.message)
     }
   }
