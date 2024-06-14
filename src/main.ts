@@ -1,77 +1,43 @@
 import * as core from '@actions/core'
-import { createRegexFromPattern } from './regex'
 import * as git from './git'
+import { Inputs } from './inputs'
+import { Branch } from './branch'
 
 /**
  * The main function for the action.
  * @returns {Promise<void>} Resolves when the action is complete.
  */
-export async function run(): Promise<void> {
+export async function createMergeUpPullRequest(): Promise<void> {
   try {
-    const currentBranch: string = core.getInput('ref')
-    const branchNamePattern: string = core.getInput('branchNamePattern')
-    const branchPatternRegex: RegExp = createRegexFromPattern(branchNamePattern)
-    const enableAutoMerge: boolean = core.getInput('enableAutoMerge') !== ''
-
-    const branches: RegExpMatchArray | null =
-      currentBranch.match(branchPatternRegex)
-    if (!branches) {
-      const message = `Ref name "${currentBranch}" does not match branch name pattern "${branchNamePattern}".`
-      core.info(message)
-      core.summary.addRaw(`:no-entry: ${message}`, true)
-      return
-    }
-
-    const majorVersion = Number(branches[1])
-    const minorVersion = Number(branches[2])
-
-    core.debug(
-      `Matched the following versions in branch name "${currentBranch}" with pattern "${branchPatternRegex}":`
-    )
-    core.debug(`Major version: ${majorVersion}`)
-    core.debug(`Minor version: ${minorVersion}`)
+    const inputs = Inputs.fromActionsInput()
+    let nextBranchName: string
 
     // Determine the next branch to merge up to
-    const nextGitBranchName: string | null = await core.group(
-      'Determine next branch',
-      async () =>
-        await git.getNextBranch(
-          branchNamePattern,
-          Number(majorVersion),
-          Number(minorVersion)
-        )
-    )
+    try {
+      nextBranchName = await getNextBranchName(inputs)
+    } catch (error) {
+      const message = (error as Error).message
+      core.info(message)
+      core.summary.addRaw(`:no-entry: ${message}`, true)
 
-    let nextBranchName: string
-    if (nextGitBranchName === null) {
-      const fallbackBranch = core.getInput('fallbackBranch')
-
-      if (!fallbackBranch) {
-        const message = `Ref name "${currentBranch}" does not have a next branch or fallback branch`
-        core.info(message)
-        core.summary.addRaw(`:no-entry: ${message}`, true)
-        return
-      }
-
-      nextBranchName = fallbackBranch
-    } else {
-      nextBranchName = nextGitBranchName
+      return
     }
 
     if (
       !(await core.group(
         'Check whether branch requires merge up',
-        async () => await git.hasNewCommits(currentBranch, nextBranchName)
+        async () =>
+          await git.hasNewCommits(inputs.currentBranch, nextBranchName)
       ))
     ) {
-      const message = `No new commits in "${currentBranch}" to merge up`
+      const message = `No new commits in "${inputs.currentBranch}" to merge up`
       core.info(message)
       core.summary.addRaw(`:no-entry: ${message}`, true)
       return
     }
 
     // Generate a new branch-name upmerge-branch: "merge-<current-branch>-into-<next-branch>-<unique-token>:
-    const newBranchName = `merge-${currentBranch}-into-${nextBranchName}-${Date.now()}`
+    const newBranchName = `merge-${inputs.currentBranch}-into-${nextBranchName}-${Date.now()}`
     try {
       await core.group(
         'Create new branch',
@@ -102,7 +68,7 @@ export async function run(): Promise<void> {
     }
 
     const pullRequest = await core.group('Create pull request', async () =>
-      git.createPullRequest(currentBranch, nextBranchName)
+      git.createPullRequest(inputs.currentBranch, nextBranchName)
     )
     if (!pullRequest) {
       const message = 'Could not create new pull request'
@@ -112,7 +78,7 @@ export async function run(): Promise<void> {
     }
 
     // Enable auto-merge if requested
-    if (enableAutoMerge) {
+    if (inputs.enableAutoMerge) {
       await core.group('Enable auto-merge', async () =>
         git.enableAutoMerge(pullRequest.id)
       )
@@ -129,7 +95,7 @@ export async function run(): Promise<void> {
   } catch (error) {
     // Fail the workflow run if an error occurs
     if (error instanceof Error) {
-      core.summary.clear()
+      await core.summary.clear()
       core.setFailed(error.message)
     }
   }
@@ -139,4 +105,34 @@ export async function run(): Promise<void> {
   } catch (error) {
     // Ignore errors when writing summary
   }
+}
+
+export async function getNextBranch(): Promise<void> {
+  const inputs = Inputs.fromActionsInput(false)
+  let nextBranchName: string
+
+  // Determine the next branch to merge up to
+  try {
+    nextBranchName = await getNextBranchName(inputs)
+  } catch (error) {
+    core.setOutput('hasNextBranch', false)
+    core.setOutput('branchName', null)
+
+    return
+  }
+
+  core.setOutput('hasNextBranch', true)
+  core.setOutput('branchName', nextBranchName)
+}
+
+async function getNextBranchName(inputs: Inputs): Promise<string> {
+  const branch = new Branch(inputs.currentBranch, inputs.branchNamePattern)
+
+  core.debug(
+    `Matched the following versions in branch name "${branch.name}" with pattern "${branch.branchNamePattern}":`
+  )
+  core.debug(`Major version: ${branch.majorVersion}`)
+  core.debug(`Minor version: ${branch.minorVersion}`)
+
+  return branch.getNextBranchName(inputs.fallbackBranch)
 }

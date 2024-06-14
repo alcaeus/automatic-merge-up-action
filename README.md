@@ -110,3 +110,35 @@ version (e.g. `main`), the `fallbackBranch` option can be used to specify this
 branch name. If no versioned branch was found, the pull request will target this
 fallback branch instead. The "Branch Selection" chapter above explains the order
 of operations.
+
+### enableAutoMerge (optional)
+
+When this option is enabled (using a truish value), the resulting PR will have
+auto-merge enabled. Note that in order for this to work, the auto-merge
+functionality has to be enabled on the repository, and the "merge" merge
+strategy has to be available. Automatic merges are always done using the "merge"
+strategy.
+
+## Determine next branch
+
+There is a separate action named `get-next-branch` that can be used to run the
+branch detection logic and return the determined information. This is useful if
+you want to run your own logic for handling merges.
+
+```yaml
+- name: "Determine branch to merge up to"
+  id: get-next-branch
+  uses: alcaeus/automatic-merge-up-action/get-next-branch@main
+  with:
+    ref: ${{ github.ref_name }}
+    branchNamePattern: 'v<major>.<minor>'
+    fallbackBranch: 'master'
+```
+
+The action takes the same inputs as the default create-pr action, except for the
+`enableAutoMerge` input which doesn't exist. The action sets two outputs:
+
+- `hasNextBranch`: this bool output is `true` if the branch detection logic
+  found a branch to merge up to, `false` otherwise.
+- `branchName`: this is the name of the next branch in the merge chain. If no
+  next branch was found (i.e. `hasNextBranch` is `false`), this value is `null`.

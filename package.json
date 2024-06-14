@@ -16,9 +16,6 @@
     "actions",
     "node"
   ],
-  "exports": {
-    ".": "./dist/index.js"
-  },
   "engines": {
     "node": ">=20"
   },
@@ -29,7 +26,9 @@
     "format:write": "prettier --write **/*.ts",
     "format:check": "prettier --check **/*.ts",
     "lint": "npx eslint . -c ./.github/linters/.eslintrc.yml",
-    "package": "ncc build src/index.ts --license licenses.txt",
+    "package": "npm run package-create-pr && npm run package-get-next-branch",
+    "package-create-pr": "ncc build src/create-pr.ts --out dist/create-pr --license licenses.txt",
+    "package-get-next-branch": "ncc build src/get-next-branch.ts --out dist/get-next-branch --license licenses.txt",
     "package:watch": "npm run package -- --watch",
     "test": "jest",
     "all": "npm run format:write && npm run lint && npm run test && npm run coverage && npm run package"

@@ -1,7 +1,3 @@
-/**
- * Unit tests for the action's entrypoint, src/index.ts
- */
-
 import { createRegexFromPattern } from '../src/regex'
 
 describe('createRegexFromPattern', () => {

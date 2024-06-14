@@ -20,6 +20,7 @@ inputs:
   enableAutoMerge:
     description: 'If non-empty, enables auto-merge on the pull request'
     required: false
+    default: 'false'
 
 outputs:
   branchName:
@@ -29,4 +30,4 @@ outputs:
 
 runs:
   using: node20
-  main: dist/index.js
+  main: dist/create-pr/index.js
