@@ -26020,7 +26020,12 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.enableAutoMerge = exports.hasNewCommits = exports.createPullRequest = exports.pushBranch = exports.createBranch = exports.branchExists = void 0;
+exports.branchExists = branchExists;
+exports.createBranch = createBranch;
+exports.pushBranch = pushBranch;
+exports.createPullRequest = createPullRequest;
+exports.hasNewCommits = hasNewCommits;
+exports.enableAutoMerge = enableAutoMerge;
 const exec = __importStar(__nccwpck_require__(1514));
 const regex_1 = __nccwpck_require__(5633);
 async function branchExists(branchName) {
@@ -26032,15 +26037,12 @@ async function branchExists(branchName) {
     ]);
     return output.stdout.includes(branchName);
 }
-exports.branchExists = branchExists;
 async function createBranch(branchName) {
     await exec.getExecOutput('git', ['checkout', '-b', branchName]);
 }
-exports.createBranch = createBranch;
 async function pushBranch(branchName) {
     await exec.getExecOutput('git', ['push', 'origin', branchName]);
 }
-exports.pushBranch = pushBranch;
 async function createPullRequest(branchName, baseName) {
     const title = `Merge ${branchName} into ${baseName}`;
     const formattedCommitList = formatCommits(await getCommitList(branchName, baseName));
@@ -26079,7 +26081,6 @@ ${formattedCommitList}
         url: matches[1]
     };
 }
-exports.createPullRequest = createPullRequest;
 async function hasNewCommits(branchName, baseName) {
     const output = await exec.getExecOutput('git', [
         'branch',
@@ -26091,7 +26092,6 @@ async function hasNewCommits(branchName, baseName) {
     const regex = new RegExp(`${escapedRegex}$`, 'm');
     return !regex.test(output.stdout);
 }
-exports.hasNewCommits = hasNewCommits;
 async function enableAutoMerge(pullRequestId) {
     await exec.exec('gh', [
         'pr',
@@ -26101,7 +26101,6 @@ async function enableAutoMerge(pullRequestId) {
         '-m' // Use merge commit strategy
     ]);
 }
-exports.enableAutoMerge = enableAutoMerge;
 async function getCommitList(branchName, baseName) {
     const output = await exec.getExecOutput('git', [
         'log',
@@ -26215,7 +26214,8 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getNextBranch = exports.createMergeUpPullRequest = void 0;
+exports.createMergeUpPullRequest = createMergeUpPullRequest;
+exports.getNextBranch = getNextBranch;
 const core = __importStar(__nccwpck_require__(2186));
 const git = __importStar(__nccwpck_require__(6350));
 const inputs_1 = __nccwpck_require__(7063);
@@ -26303,7 +26303,6 @@ async function createMergeUpPullRequest() {
         // Ignore errors when writing summary
     }
 }
-exports.createMergeUpPullRequest = createMergeUpPullRequest;
 async function getNextBranch() {
     const inputs = inputs_1.Inputs.fromActionsInput(false);
     let nextBranchName;
@@ -26319,7 +26318,6 @@ async function getNextBranch() {
     core.setOutput('hasNextBranch', true);
     core.setOutput('branchName', nextBranchName);
 }
-exports.getNextBranch = getNextBranch;
 async function getNextBranchName(inputs) {
     const branch = new branch_1.Branch(inputs.currentBranch, inputs.branchNamePattern);
     core.debug(`Matched the following versions in branch name "${branch.name}" with pattern "${branch.branchNamePattern}":`);
@@ -26337,18 +26335,17 @@ async function getNextBranchName(inputs) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.createRegexFromPattern = exports.escapeRegex = void 0;
+exports.escapeRegex = escapeRegex;
+exports.createRegexFromPattern = createRegexFromPattern;
 function escapeRegex(regex) {
     // Shamelessly copied from https://stackoverflow.com/a/6969486
     return regex.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
 }
-exports.escapeRegex = escapeRegex;
 function createRegexFromPattern(pattern) {
     return new RegExp(`^${escapeRegex(pattern)
         .replace('<major>', '([0-9]+)')
         .replace('<minor>', '([0-9]+)')}$`);
 }
-exports.createRegexFromPattern = createRegexFromPattern;
 
 
 /***/ }),
