@@ -12,7 +12,8 @@ permissions:
   contents: write
   pull-requests: write
 
-# Export GitHub token to environment - you can pass your own token here if desired
+# Export GitHub token to environment - you can pass your own token here if
+# desired
 env:
   GH_TOKEN: ${{ github.token }}
 
@@ -26,7 +27,8 @@ jobs:
         id: checkout
         uses: actions/checkout@v4
         with:
-          # Make sure to include fetch-depth 0 so all branches are fetched, not just the current one
+          # Make sure to include fetch-depth 0 so all branches are fetched, not
+          # just the current one
           fetch-depth: 0
 
       - name: Create pull request
