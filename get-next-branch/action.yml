@@ -7,11 +7,14 @@ inputs:
     description: 'The ref to merge up'
     required: true
   branchNamePattern:
-    description: 'Pattern to use for branch names. Use <major> and <minor> for version placeholders'
+    description:
+      'Pattern to use for branch names. Use <major> and <minor> for version
+      placeholders'
     required: false
     default: '<major>.<minor>'
   fallbackBranch:
-    description: 'A branch to fall back on if no next branch matching the pattern was found'
+    description:
+      'A branch to fall back on if no next branch matching the pattern was found'
     required: false
 
 outputs:

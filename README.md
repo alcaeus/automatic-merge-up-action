@@ -46,7 +46,7 @@ permissions:
 If you need to run actions on newly created pull request, create a custom token
 with the `repo` scope and use it instead of the default `github.token`. Note
 that you also need to pass a token to the checkout action to ensure credentials
-are set in the git repository to allow you to push a new branch.
+are set in the Git repository to allow you to push a new branch.
 
 ## Resolving Conflicts
 
@@ -126,7 +126,7 @@ branch detection logic and return the determined information. This is useful if
 you want to run your own logic for handling merges.
 
 ```yaml
-- name: "Determine branch to merge up to"
+- name: 'Determine branch to merge up to'
   id: get-next-branch
   uses: alcaeus/automatic-merge-up-action/get-next-branch@main
   with:
