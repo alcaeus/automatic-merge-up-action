@@ -31,6 +31,28 @@ matching branch has been found. It can thus be used to efficiently merge changes
 up through several releases, ensuring branch protection rules and CI
 requirements are met.
 
+### Dev branches
+
+In addition to the `branchNamePattern` you can also specify a
+`devBranchNamePattern` input. This can be used if you are maintaining multiple
+major versions at the same time. Considering the default value for
+`branchNamePattern` (`<major>.<minor>`) and a `devBranchNamePattern` of
+`<major>.x`, the candidate branches when a commit is pushed to `v1.3` looks like
+this:
+
+- `v1.4`
+- `v1.x`
+- `v2.0`
+- `v2.x`
+- The configured fallback branch (if set)
+
+When pushing to a branch that matches the dev name pattern (e.g. `v1.x`), only
+branches for the next major version are considered:
+
+- `v2.0`
+- `v2.x`
+- The configured fallback branch (if set)
+
 ### Default token
 
 If you have no GitHub Actions workflows that are run when a new pull request is
@@ -102,6 +124,15 @@ correctly. The branch name pattern is used for the following purposes:
   match
 - To generate new branch names. When checking for branches, the placeholders are
   replaced with the computed values according to the SemVer release.
+
+### devBranchNamePattern (optional)
+
+The `devBranchNamePattern` input can be used to configure the naming strategy
+for development (i.e. upcoming versions) branches. By default, it is empty and
+supports `<major>` as a placeholder. This pattern is used to match the branch
+name if it does not match the `branchNamePattern`, and is used to generate
+candidate branch names, where the `<major>` placeholder is replaced with the
+computed value according to the SemVer release.
 
 ### fallbackBranch (optional)
 

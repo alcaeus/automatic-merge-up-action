@@ -12,6 +12,12 @@ inputs:
       placeholders'
     required: false
     default: '<major>.<minor>'
+  devBranchNamePattern:
+    description:
+      'Pattern to use for dev branch names. Use <major> for version
+      placeholders'
+    required: false
+    default: ''
   fallbackBranch:
     description:
       'A branch to fall back on if no next branch matching the pattern was found'

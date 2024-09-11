@@ -26191,17 +26191,19 @@ exports.Inputs = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 class Inputs {
     currentBranch;
-    branchNamePattern;
+    stableBranchNamePattern;
+    devBranchNamePattern;
     fallbackBranch;
     enableAutoMerge;
-    constructor(currentBranch, branchNamePattern, fallbackBranch, enableAutoMerge) {
+    constructor(currentBranch, stableBranchNamePattern, devBranchNamePattern, fallbackBranch, enableAutoMerge) {
         this.currentBranch = currentBranch;
-        this.branchNamePattern = branchNamePattern;
+        this.stableBranchNamePattern = stableBranchNamePattern;
+        this.devBranchNamePattern = devBranchNamePattern;
         this.fallbackBranch = fallbackBranch;
         this.enableAutoMerge = enableAutoMerge;
     }
     static fromActionsInput(includeAutoMergeOption = true) {
-        return new Inputs(core.getInput('ref'), core.getInput('branchNamePattern'), core.getInput('fallbackBranch'), includeAutoMergeOption ? core.getBooleanInput('enableAutoMerge') : false);
+        return new Inputs(core.getInput('ref'), core.getInput('branchNamePattern'), core.getInput('devBranchNamePattern'), core.getInput('fallbackBranch'), includeAutoMergeOption ? core.getBooleanInput('enableAutoMerge') : false);
     }
 }
 exports.Inputs = Inputs;
@@ -26343,11 +26345,11 @@ async function getNextBranch() {
     core.setOutput('branchName', nextBranchName);
 }
 async function getNextBranchName(inputs) {
-    // TODO: use devBranchNamePattern
-    const branch = new branch_1.Branch(inputs.currentBranch, inputs.branchNamePattern, '');
-    core.debug(`Matched the following versions in branch name "${branch.name}" with pattern "${branch.stableBranchNamePattern}":`);
+    const branch = new branch_1.Branch(inputs.currentBranch, inputs.stableBranchNamePattern, inputs.devBranchNamePattern);
+    core.debug(`Matched the following versions in branch name "${branch.name}" with patterns "${branch.stableBranchNamePattern}", "${branch.devBranchNamePattern}":`);
     core.debug(`Major version: ${branch.majorVersion}`);
     core.debug(`Minor version: ${branch.minorVersion}`);
+    core.debug(`Stable: ${branch.isStable}`);
     return branch.getNextBranchName(inputs.fallbackBranch);
 }
 
