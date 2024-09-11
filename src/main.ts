@@ -126,10 +126,11 @@ export async function getNextBranch(): Promise<void> {
 }
 
 async function getNextBranchName(inputs: Inputs): Promise<string> {
-  const branch = new Branch(inputs.currentBranch, inputs.branchNamePattern)
+  // TODO: use devBranchNamePattern
+  const branch = new Branch(inputs.currentBranch, inputs.branchNamePattern, '')
 
   core.debug(
-    `Matched the following versions in branch name "${branch.name}" with pattern "${branch.branchNamePattern}":`
+    `Matched the following versions in branch name "${branch.name}" with pattern "${branch.stableBranchNamePattern}":`
   )
   core.debug(`Major version: ${branch.majorVersion}`)
   core.debug(`Minor version: ${branch.minorVersion}`)

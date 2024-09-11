@@ -4,48 +4,87 @@ import { branchExists } from './git'
 export class Branch {
   readonly name: string
   readonly majorVersion: number
-  readonly minorVersion: number
-  readonly branchNamePattern: string
+  readonly minorVersion: number | null
+  readonly stableBranchNamePattern: string
+  readonly devBranchNamePattern: string
+  readonly isStable: boolean = true
 
-  constructor(name: string, branchNamePattern: string) {
+  constructor(
+    name: string,
+    stableBranchNamePattern: string,
+    devBranchNamePattern: string
+  ) {
     this.name = name
-    this.branchNamePattern = branchNamePattern
+    this.stableBranchNamePattern = stableBranchNamePattern
+    this.devBranchNamePattern = devBranchNamePattern
 
-    const branchPatternRegex = createRegexFromPattern(branchNamePattern)
+    const stableBranchPatternRegex = createRegexFromPattern(
+      stableBranchNamePattern
+    )
+    const devBranchPatternRegex = createRegexFromPattern(devBranchNamePattern)
 
-    const versions = name.match(branchPatternRegex)
+    let versions = name.match(stableBranchPatternRegex)
     if (!versions) {
-      throw new Error(
-        `Ref name "${name}" does not match branch name pattern "${branchNamePattern}".`
-      )
+      this.isStable = false
+
+      if (this.devBranchNamePattern) {
+        versions = name.match(devBranchPatternRegex)
+      }
+
+      if (!versions) {
+        throw new Error(
+          `Ref name "${name}" does not match branch name patterns "${stableBranchNamePattern}" or "${devBranchNamePattern}".`
+        )
+      }
     }
 
     this.majorVersion = Number(versions[1])
-    this.minorVersion = Number(versions[2])
+    this.minorVersion = versions[2] ? Number(versions[2]) : null
   }
 
-  getNextMajorBranch(): string {
-    return this.branchNamePattern
+  getNextMajorStableBranch(): string {
+    return this.stableBranchNamePattern
       .replace('<major>', (this.majorVersion + 1).toString())
       .replace('<minor>', '0')
   }
 
-  getNextMinorBranch(): string {
-    return this.branchNamePattern
-      .replace('<major>', this.majorVersion.toString())
-      .replace('<minor>', (this.minorVersion + 1).toString())
+  getNextMajorDevBranch(): string {
+    return this.devBranchNamePattern.replace(
+      '<major>',
+      (this.majorVersion + 1).toString()
+    )
+  }
+
+  getNextMinorStableBranch(): string {
+    return this.isStable && this.minorVersion != null
+      ? this.stableBranchNamePattern
+          .replace('<major>', this.majorVersion.toString())
+          .replace('<minor>', (this.minorVersion + 1).toString())
+      : ''
+  }
+
+  getNextMinorDevBranch(): string {
+    return this.isStable
+      ? this.devBranchNamePattern.replace(
+          '<major>',
+          this.majorVersion.toString()
+        )
+      : ''
   }
 
   async getNextBranchName(fallbackBranch: string): Promise<string> {
-    const nextMajorBranch = this.getNextMajorBranch()
-    const nextMinorBranch = this.getNextMinorBranch()
+    // Assemble candidate branches, skipping empty branch names
+    const branches = [
+      this.getNextMinorStableBranch(),
+      this.getNextMinorDevBranch(),
+      this.getNextMajorStableBranch(),
+      this.getNextMajorDevBranch()
+    ].filter(branchName => branchName !== '')
 
-    if (await branchExists(nextMinorBranch)) {
-      return nextMinorBranch
-    }
-
-    if (await branchExists(nextMajorBranch)) {
-      return nextMajorBranch
+    for (const branchName of branches) {
+      if (await branchExists(branchName)) {
+        return branchName
+      }
     }
 
     if (fallbackBranch) {
