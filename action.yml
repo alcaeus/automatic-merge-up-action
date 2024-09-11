@@ -20,8 +20,7 @@ inputs:
     default: '<major>.<minor>'
   devBranchNamePattern:
     description:
-      'Pattern to use for dev branch names. Use <major> for version
-      placeholders'
+      'Pattern to use for dev branch names. Use <major> for version placeholders'
     required: false
     default: ''
   fallbackBranch:
