@@ -25949,36 +25949,60 @@ class Branch {
     name;
     majorVersion;
     minorVersion;
-    branchNamePattern;
-    constructor(name, branchNamePattern) {
+    stableBranchNamePattern;
+    devBranchNamePattern;
+    isStable = true;
+    constructor(name, stableBranchNamePattern, devBranchNamePattern) {
         this.name = name;
-        this.branchNamePattern = branchNamePattern;
-        const branchPatternRegex = (0, regex_1.createRegexFromPattern)(branchNamePattern);
-        const versions = name.match(branchPatternRegex);
+        this.stableBranchNamePattern = stableBranchNamePattern;
+        this.devBranchNamePattern = devBranchNamePattern;
+        const stableBranchPatternRegex = (0, regex_1.createRegexFromPattern)(stableBranchNamePattern);
+        const devBranchPatternRegex = (0, regex_1.createRegexFromPattern)(devBranchNamePattern);
+        let versions = name.match(stableBranchPatternRegex);
         if (!versions) {
-            throw new Error(`Ref name "${name}" does not match branch name pattern "${branchNamePattern}".`);
+            this.isStable = false;
+            if (this.devBranchNamePattern) {
+                versions = name.match(devBranchPatternRegex);
+            }
+            if (!versions) {
+                throw new Error(`Ref name "${name}" does not match branch name patterns "${stableBranchNamePattern}" or "${devBranchNamePattern}".`);
+            }
         }
         this.majorVersion = Number(versions[1]);
-        this.minorVersion = Number(versions[2]);
+        this.minorVersion = versions[2] ? Number(versions[2]) : null;
     }
-    getNextMajorBranch() {
-        return this.branchNamePattern
+    getNextMajorStableBranch() {
+        return this.stableBranchNamePattern
             .replace('<major>', (this.majorVersion + 1).toString())
             .replace('<minor>', '0');
     }
-    getNextMinorBranch() {
-        return this.branchNamePattern
-            .replace('<major>', this.majorVersion.toString())
-            .replace('<minor>', (this.minorVersion + 1).toString());
+    getNextMajorDevBranch() {
+        return this.devBranchNamePattern.replace('<major>', (this.majorVersion + 1).toString());
+    }
+    getNextMinorStableBranch() {
+        return this.isStable && this.minorVersion != null
+            ? this.stableBranchNamePattern
+                .replace('<major>', this.majorVersion.toString())
+                .replace('<minor>', (this.minorVersion + 1).toString())
+            : '';
+    }
+    getNextMinorDevBranch() {
+        return this.isStable
+            ? this.devBranchNamePattern.replace('<major>', this.majorVersion.toString())
+            : '';
     }
     async getNextBranchName(fallbackBranch) {
-        const nextMajorBranch = this.getNextMajorBranch();
-        const nextMinorBranch = this.getNextMinorBranch();
-        if (await (0, git_1.branchExists)(nextMinorBranch)) {
-            return nextMinorBranch;
-        }
-        if (await (0, git_1.branchExists)(nextMajorBranch)) {
-            return nextMajorBranch;
+        // Assemble candidate branches, skipping empty branch names
+        const branches = [
+            this.getNextMinorStableBranch(),
+            this.getNextMinorDevBranch(),
+            this.getNextMajorStableBranch(),
+            this.getNextMajorDevBranch()
+        ].filter(branchName => branchName !== '');
+        for (const branchName of branches) {
+            if (await (0, git_1.branchExists)(branchName)) {
+                return branchName;
+            }
         }
         if (fallbackBranch) {
             return fallbackBranch;
@@ -26167,17 +26191,19 @@ exports.Inputs = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 class Inputs {
     currentBranch;
-    branchNamePattern;
+    stableBranchNamePattern;
+    devBranchNamePattern;
     fallbackBranch;
     enableAutoMerge;
-    constructor(currentBranch, branchNamePattern, fallbackBranch, enableAutoMerge) {
+    constructor(currentBranch, stableBranchNamePattern, devBranchNamePattern, fallbackBranch, enableAutoMerge) {
         this.currentBranch = currentBranch;
-        this.branchNamePattern = branchNamePattern;
+        this.stableBranchNamePattern = stableBranchNamePattern;
+        this.devBranchNamePattern = devBranchNamePattern;
         this.fallbackBranch = fallbackBranch;
         this.enableAutoMerge = enableAutoMerge;
     }
     static fromActionsInput(includeAutoMergeOption = true) {
-        return new Inputs(core.getInput('ref'), core.getInput('branchNamePattern'), core.getInput('fallbackBranch'), includeAutoMergeOption ? core.getBooleanInput('enableAutoMerge') : false);
+        return new Inputs(core.getInput('ref'), core.getInput('branchNamePattern'), core.getInput('devBranchNamePattern'), core.getInput('fallbackBranch'), includeAutoMergeOption ? core.getBooleanInput('enableAutoMerge') : false);
     }
 }
 exports.Inputs = Inputs;
@@ -26319,10 +26345,11 @@ async function getNextBranch() {
     core.setOutput('branchName', nextBranchName);
 }
 async function getNextBranchName(inputs) {
-    const branch = new branch_1.Branch(inputs.currentBranch, inputs.branchNamePattern);
-    core.debug(`Matched the following versions in branch name "${branch.name}" with pattern "${branch.branchNamePattern}":`);
+    const branch = new branch_1.Branch(inputs.currentBranch, inputs.stableBranchNamePattern, inputs.devBranchNamePattern);
+    core.debug(`Matched the following versions in branch name "${branch.name}" with patterns "${branch.stableBranchNamePattern}", "${branch.devBranchNamePattern}":`);
     core.debug(`Major version: ${branch.majorVersion}`);
     core.debug(`Minor version: ${branch.minorVersion}`);
+    core.debug(`Stable: ${branch.isStable}`);
     return branch.getNextBranchName(inputs.fallbackBranch);
 }
 

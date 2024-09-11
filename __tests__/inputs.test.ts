@@ -6,10 +6,17 @@ let getBooleanInputMock: jest.SpiedFunction<typeof core.getBooleanInput>
 
 describe('Inputs', () => {
   it('stores values provided in the constructor', async () => {
-    const inputs = new Inputs('v1.19', 'v<major>.<minor>', 'main', true)
+    const inputs = new Inputs(
+      'v1.19',
+      'v<major>.<minor>',
+      'v<major>.x',
+      'main',
+      true
+    )
 
     expect(inputs.currentBranch).toStrictEqual('v1.19')
-    expect(inputs.branchNamePattern).toStrictEqual('v<major>.<minor>')
+    expect(inputs.stableBranchNamePattern).toStrictEqual('v<major>.<minor>')
+    expect(inputs.devBranchNamePattern).toStrictEqual('v<major>.x')
     expect(inputs.fallbackBranch).toStrictEqual('main')
     expect(inputs.enableAutoMerge).toStrictEqual(true)
   })
@@ -22,6 +29,8 @@ describe('Inputs', () => {
           return 'v1.19'
         case 'branchNamePattern':
           return 'v<major>.<minor>'
+        case 'devBranchNamePattern':
+          return 'v<major>.x'
         case 'fallbackBranch':
           return 'main'
         default:
@@ -44,11 +53,12 @@ describe('Inputs', () => {
     const inputs = Inputs.fromActionsInput()
 
     expect(inputs.currentBranch).toStrictEqual('v1.19')
-    expect(inputs.branchNamePattern).toStrictEqual('v<major>.<minor>')
+    expect(inputs.stableBranchNamePattern).toStrictEqual('v<major>.<minor>')
+    expect(inputs.devBranchNamePattern).toStrictEqual('v<major>.x')
     expect(inputs.enableAutoMerge).toStrictEqual(true)
     expect(inputs.fallbackBranch).toStrictEqual('main')
 
-    expect(getInputMock).toHaveBeenCalledTimes(3)
+    expect(getInputMock).toHaveBeenCalledTimes(4)
     expect(getBooleanInputMock).toHaveBeenCalledTimes(1)
   })
 
@@ -83,7 +93,7 @@ describe('Inputs', () => {
 
     expect(inputs.enableAutoMerge).toStrictEqual(false)
 
-    expect(getInputMock).toHaveBeenCalledTimes(3)
+    expect(getInputMock).toHaveBeenCalledTimes(4)
     expect(getBooleanInputMock).toHaveBeenCalledTimes(1)
   })
 })
