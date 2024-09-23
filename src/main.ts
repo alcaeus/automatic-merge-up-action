@@ -102,7 +102,7 @@ export async function createMergeUpPullRequest(): Promise<void> {
 
   try {
     await core.summary.write()
-  } catch (error) {
+  } catch (_) {
     // Ignore errors when writing summary
   }
 }
@@ -114,7 +114,7 @@ export async function getNextBranch(): Promise<void> {
   // Determine the next branch to merge up to
   try {
     nextBranchName = await getNextBranchName(inputs)
-  } catch (error) {
+  } catch (_) {
     core.setOutput('hasNextBranch', false)
     core.setOutput('branchName', null)
 
