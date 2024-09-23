@@ -26325,7 +26325,7 @@ async function createMergeUpPullRequest() {
     try {
         await core.summary.write();
     }
-    catch (error) {
+    catch (_) {
         // Ignore errors when writing summary
     }
 }
@@ -26336,7 +26336,7 @@ async function getNextBranch() {
     try {
         nextBranchName = await getNextBranchName(inputs);
     }
-    catch (error) {
+    catch (_) {
         core.setOutput('hasNextBranch', false);
         core.setOutput('branchName', null);
         return;
