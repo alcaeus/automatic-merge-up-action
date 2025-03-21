@@ -11,7 +11,8 @@ describe('Inputs', () => {
       'v<major>.<minor>',
       'v<major>.x',
       'main',
-      true
+      true,
+      ['v1.x']
     )
 
     expect(inputs.currentBranch).toStrictEqual('v1.19')
@@ -19,6 +20,7 @@ describe('Inputs', () => {
     expect(inputs.devBranchNamePattern).toStrictEqual('v<major>.x')
     expect(inputs.fallbackBranch).toStrictEqual('main')
     expect(inputs.enableAutoMerge).toStrictEqual(true)
+    expect(inputs.ignoredBranches).toStrictEqual(['v1.x'])
   })
 
   it('retrieves values from input', async () => {
@@ -33,6 +35,8 @@ describe('Inputs', () => {
           return 'v<major>.x'
         case 'fallbackBranch':
           return 'main'
+        case 'ignoredBranches':
+          return '["v1.x"]'
         default:
           return ''
       }
@@ -57,8 +61,9 @@ describe('Inputs', () => {
     expect(inputs.devBranchNamePattern).toStrictEqual('v<major>.x')
     expect(inputs.enableAutoMerge).toStrictEqual(true)
     expect(inputs.fallbackBranch).toStrictEqual('main')
+    expect(inputs.ignoredBranches).toStrictEqual(['v1.x'])
 
-    expect(getInputMock).toHaveBeenCalledTimes(4)
+    expect(getInputMock).toHaveBeenCalledTimes(5)
     expect(getBooleanInputMock).toHaveBeenCalledTimes(1)
   })
 
@@ -71,6 +76,9 @@ describe('Inputs', () => {
         case 'branchNamePattern':
           return 'v<major>.<minor>'
         case 'fallbackBranch':
+          return ''
+        case 'ignoredBranches':
+          // Return an empty string on purpose
           return ''
         default:
           return ''
@@ -93,7 +101,7 @@ describe('Inputs', () => {
 
     expect(inputs.enableAutoMerge).toStrictEqual(false)
 
-    expect(getInputMock).toHaveBeenCalledTimes(4)
+    expect(getInputMock).toHaveBeenCalledTimes(5)
     expect(getBooleanInputMock).toHaveBeenCalledTimes(1)
   })
 })
