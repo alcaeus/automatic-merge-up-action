@@ -21,6 +21,10 @@ inputs:
     description:
       'A branch to fall back on if no next branch matching the pattern was found'
     required: false
+  ignoredBranches:
+    description: 'JSON list of branches to ignore'
+    required: false
+    default: '[]'
 
 outputs:
   hasNextBranch:

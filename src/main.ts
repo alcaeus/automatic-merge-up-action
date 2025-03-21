@@ -129,7 +129,8 @@ async function getNextBranchName(inputs: Inputs): Promise<string> {
   const branch = new Branch(
     inputs.currentBranch,
     inputs.stableBranchNamePattern,
-    inputs.devBranchNamePattern
+    inputs.devBranchNamePattern,
+    inputs.ignoredBranches
   )
 
   core.debug(
