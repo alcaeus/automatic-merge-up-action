@@ -25426,11 +25426,13 @@ class Branch {
     minorVersion;
     stableBranchNamePattern;
     devBranchNamePattern;
+    ignoredBranches;
     isStable = true;
-    constructor(name, stableBranchNamePattern, devBranchNamePattern) {
+    constructor(name, stableBranchNamePattern, devBranchNamePattern, ignoredBranches) {
         this.name = name;
         this.stableBranchNamePattern = stableBranchNamePattern;
         this.devBranchNamePattern = devBranchNamePattern;
+        this.ignoredBranches = ignoredBranches;
         const stableBranchPatternRegex = (0, regex_1.createRegexFromPattern)(stableBranchNamePattern);
         const devBranchPatternRegex = (0, regex_1.createRegexFromPattern)(devBranchNamePattern);
         let versions = name.match(stableBranchPatternRegex);
@@ -25447,24 +25449,43 @@ class Branch {
         this.minorVersion = versions[2] ? Number(versions[2]) : null;
     }
     getNextMajorStableBranch() {
-        return this.stableBranchNamePattern
-            .replace('<major>', (this.majorVersion + 1).toString())
-            .replace('<minor>', '0');
+        return this.getNextNotIgnoredStableBranch(this.majorVersion + 1, 0);
     }
     getNextMajorDevBranch() {
-        return this.devBranchNamePattern.replace('<major>', (this.majorVersion + 1).toString());
+        return this.getNextNotIgnoredDevBranch(this.majorVersion + 1);
     }
     getNextMinorStableBranch() {
         return this.isStable && this.minorVersion != null
-            ? this.stableBranchNamePattern
-                .replace('<major>', this.majorVersion.toString())
-                .replace('<minor>', (this.minorVersion + 1).toString())
+            ? this.getNextNotIgnoredStableBranch(this.majorVersion, this.minorVersion + 1)
             : '';
     }
     getNextMinorDevBranch() {
-        return this.isStable
-            ? this.devBranchNamePattern.replace('<major>', this.majorVersion.toString())
-            : '';
+        if (!this.isStable) {
+            return '';
+        }
+        const nextBranchName = this.devBranchNamePattern.replace('<major>', this.majorVersion.toString());
+        // If the next minor dev branch is ignored, return an empty string to skip this branch
+        return this.ignoredBranches.includes(nextBranchName) ? '' : nextBranchName;
+    }
+    getNextNotIgnoredStableBranch(majorVersion, minorVersion) {
+        let nextMinorVersion = minorVersion;
+        let nextBranchName;
+        do {
+            nextBranchName = this.stableBranchNamePattern
+                .replace('<major>', majorVersion.toString())
+                .replace('<minor>', nextMinorVersion.toString());
+            nextMinorVersion++;
+        } while (this.ignoredBranches.includes(nextBranchName));
+        return nextBranchName;
+    }
+    getNextNotIgnoredDevBranch(majorVersion) {
+        let nextMajorVersion = majorVersion;
+        let nextBranchName;
+        do {
+            nextBranchName = this.devBranchNamePattern.replace('<major>', nextMajorVersion.toString());
+            nextMajorVersion++;
+        } while (this.ignoredBranches.includes(nextBranchName));
+        return nextBranchName;
     }
     async getNextBranchName(fallbackBranch) {
         // Assemble candidate branches, skipping empty branch names
@@ -25690,15 +25711,18 @@ class Inputs {
     devBranchNamePattern;
     fallbackBranch;
     enableAutoMerge;
-    constructor(currentBranch, stableBranchNamePattern, devBranchNamePattern, fallbackBranch, enableAutoMerge) {
+    ignoredBranches;
+    constructor(currentBranch, stableBranchNamePattern, devBranchNamePattern, fallbackBranch, enableAutoMerge, ignoredBranches) {
         this.currentBranch = currentBranch;
         this.stableBranchNamePattern = stableBranchNamePattern;
         this.devBranchNamePattern = devBranchNamePattern;
         this.fallbackBranch = fallbackBranch;
         this.enableAutoMerge = enableAutoMerge;
+        this.ignoredBranches = ignoredBranches;
     }
     static fromActionsInput(includeAutoMergeOption = true) {
-        return new Inputs(core.getInput('ref'), core.getInput('branchNamePattern'), core.getInput('devBranchNamePattern'), core.getInput('fallbackBranch'), includeAutoMergeOption ? core.getBooleanInput('enableAutoMerge') : false);
+        const ignoredBranches = core.getInput('ignoredBranches');
+        return new Inputs(core.getInput('ref'), core.getInput('branchNamePattern'), core.getInput('devBranchNamePattern'), core.getInput('fallbackBranch'), includeAutoMergeOption ? core.getBooleanInput('enableAutoMerge') : false, ignoredBranches ? JSON.parse(ignoredBranches) : []);
     }
 }
 exports.Inputs = Inputs;
@@ -25850,7 +25874,7 @@ async function getNextBranch() {
     core.setOutput('branchName', nextBranchName);
 }
 async function getNextBranchName(inputs) {
-    const branch = new branch_1.Branch(inputs.currentBranch, inputs.stableBranchNamePattern, inputs.devBranchNamePattern);
+    const branch = new branch_1.Branch(inputs.currentBranch, inputs.stableBranchNamePattern, inputs.devBranchNamePattern, inputs.ignoredBranches);
     core.debug(`Matched the following versions in branch name "${branch.name}" with patterns "${branch.stableBranchNamePattern}", "${branch.devBranchNamePattern}":`);
     core.debug(`Major version: ${branch.majorVersion}`);
     core.debug(`Minor version: ${branch.minorVersion}`);
