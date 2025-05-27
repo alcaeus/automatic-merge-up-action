@@ -31,6 +31,10 @@ inputs:
     description: 'If non-empty, enables auto-merge on the pull request'
     required: false
     default: 'false'
+  ignoredBranches:
+    description: 'JSON list of branches to ignore'
+    required: false
+    default: '[]'
 
 outputs:
   branchName:

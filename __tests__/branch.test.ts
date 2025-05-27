@@ -10,6 +10,7 @@ describe('Branch', () => {
       name: 'v1.19',
       stableBranchNamePattern: 'v<major>.<minor>',
       devBranchNamePattern: '',
+      ignoredBranches: [],
       majorVersion: 1,
       minorVersion: 19,
       nextMajorStableBranch: 'v2.0',
@@ -23,6 +24,7 @@ describe('Branch', () => {
       name: '1.18',
       stableBranchNamePattern: '<major>.<minor>',
       devBranchNamePattern: '',
+      ignoredBranches: [],
       majorVersion: 1,
       minorVersion: 18,
       nextMajorStableBranch: '2.0',
@@ -36,6 +38,7 @@ describe('Branch', () => {
       name: '1.17.x',
       stableBranchNamePattern: '<major>.<minor>.x',
       devBranchNamePattern: '',
+      ignoredBranches: [],
       majorVersion: 1,
       minorVersion: 17,
       nextMajorStableBranch: '2.0.x',
@@ -49,6 +52,7 @@ describe('Branch', () => {
       name: 'v1.19',
       stableBranchNamePattern: 'v<major>.<minor>',
       devBranchNamePattern: 'v<major>.x',
+      ignoredBranches: [],
       majorVersion: 1,
       minorVersion: 19,
       nextMajorStableBranch: 'v2.0',
@@ -62,11 +66,55 @@ describe('Branch', () => {
       name: 'v1.x',
       stableBranchNamePattern: 'v<major>.<minor>',
       devBranchNamePattern: 'v<major>.x',
+      ignoredBranches: [],
       majorVersion: 1,
       minorVersion: null,
       nextMajorStableBranch: 'v2.0',
       nextMinorStableBranch: '',
       nextMajorDevBranch: 'v2.x',
+      nextMinorDevBranch: '',
+      isStable: false
+    },
+    {
+      description: 'v<major>.<minor> with no dev branch and ignored branches',
+      name: 'v1.19',
+      stableBranchNamePattern: 'v<major>.<minor>',
+      devBranchNamePattern: '',
+      ignoredBranches: ['v1.20', 'v1.21', 'v2.0'],
+      majorVersion: 1,
+      minorVersion: 19,
+      nextMajorStableBranch: 'v2.1',
+      nextMinorStableBranch: 'v1.22',
+      nextMajorDevBranch: '',
+      nextMinorDevBranch: '',
+      isStable: true
+    },
+    {
+      description: 'v<major>.<minor> with a dev branch and ignored branches',
+      name: 'v1.19',
+      stableBranchNamePattern: 'v<major>.<minor>',
+      devBranchNamePattern: 'v<major>.x',
+      ignoredBranches: ['v1.20', 'v1.21', 'v2.0'],
+      majorVersion: 1,
+      minorVersion: 19,
+      nextMajorStableBranch: 'v2.1',
+      nextMinorStableBranch: 'v1.22',
+      nextMajorDevBranch: 'v2.x',
+      nextMinorDevBranch: 'v1.x',
+      isStable: true
+    },
+    {
+      description:
+        'dev branch for v<major>.<minor> and ignored next major dev branch',
+      name: 'v1.x',
+      stableBranchNamePattern: 'v<major>.<minor>',
+      devBranchNamePattern: 'v<major>.x',
+      ignoredBranches: ['v2.x'],
+      majorVersion: 1,
+      minorVersion: null,
+      nextMajorStableBranch: 'v2.0',
+      nextMinorStableBranch: '',
+      nextMajorDevBranch: 'v3.x',
       nextMinorDevBranch: '',
       isStable: false
     }
@@ -78,6 +126,7 @@ describe('Branch', () => {
       name: 'v1.19',
       stableBranchNamePattern: 'v<major>.<minor>',
       devBranchNamePattern: 'v<major>.x',
+      ignoredBranches: [],
       existingBranches: [],
       nextBranchName: 'fallback'
     },
@@ -86,6 +135,7 @@ describe('Branch', () => {
       name: 'v1.19',
       stableBranchNamePattern: 'v<major>.<minor>',
       devBranchNamePattern: 'v<major>.x',
+      ignoredBranches: [],
       existingBranches: ['v1.20'],
       nextBranchName: 'v1.20'
     },
@@ -94,6 +144,7 @@ describe('Branch', () => {
       name: 'v1.19',
       stableBranchNamePattern: 'v<major>.<minor>',
       devBranchNamePattern: 'v<major>.x',
+      ignoredBranches: [],
       existingBranches: ['v1.x'],
       nextBranchName: 'v1.x'
     },
@@ -102,6 +153,7 @@ describe('Branch', () => {
       name: 'v1.19',
       stableBranchNamePattern: 'v<major>.<minor>',
       devBranchNamePattern: 'v<major>.x',
+      ignoredBranches: [],
       existingBranches: ['v2.0'],
       nextBranchName: 'v2.0'
     },
@@ -110,6 +162,7 @@ describe('Branch', () => {
       name: 'v1.19',
       stableBranchNamePattern: 'v<major>.<minor>',
       devBranchNamePattern: 'v<major>.x',
+      ignoredBranches: [],
       existingBranches: ['v2.x'],
       nextBranchName: 'v2.x'
     },
@@ -118,6 +171,7 @@ describe('Branch', () => {
       name: 'v1.19',
       stableBranchNamePattern: 'v<major>.<minor>',
       devBranchNamePattern: 'v<major>.x',
+      ignoredBranches: [],
       existingBranches: ['v1.20', 'v1.x'],
       nextBranchName: 'v1.20'
     },
@@ -126,6 +180,7 @@ describe('Branch', () => {
       name: 'v1.19',
       stableBranchNamePattern: 'v<major>.<minor>',
       devBranchNamePattern: 'v<major>.x',
+      ignoredBranches: [],
       existingBranches: ['v1.20', 'v1.x', 'v2.0', 'v2.x'],
       nextBranchName: 'v1.20'
     },
@@ -134,6 +189,7 @@ describe('Branch', () => {
       name: 'v1.19',
       stableBranchNamePattern: 'v<major>.<minor>',
       devBranchNamePattern: 'v<major>.x',
+      ignoredBranches: [],
       existingBranches: ['v2.0', 'v2.x'],
       nextBranchName: 'v2.0'
     },
@@ -142,6 +198,7 @@ describe('Branch', () => {
       name: 'v1.19',
       stableBranchNamePattern: 'v<major>.<minor>',
       devBranchNamePattern: '',
+      ignoredBranches: [],
       existingBranches: ['v1.x', 'v2.x'],
       nextBranchName: 'fallback'
     },
@@ -150,6 +207,7 @@ describe('Branch', () => {
       name: 'v1.x',
       stableBranchNamePattern: 'v<major>.<minor>',
       devBranchNamePattern: 'v<major>.x',
+      ignoredBranches: [],
       existingBranches: ['v1.x', 'v2.0', 'v2.x'],
       nextBranchName: 'v2.0'
     },
@@ -158,9 +216,83 @@ describe('Branch', () => {
       name: 'v1.x',
       stableBranchNamePattern: 'v<major>.<minor>',
       devBranchNamePattern: 'v<major>.x',
+      ignoredBranches: [],
       existingBranches: ['v1.x', 'v2.x'],
       nextBranchName: 'v2.x'
+    },
+    {
+      description: 'Next minor version branch exists, but is ignored',
+      name: 'v1.19',
+      stableBranchNamePattern: 'v<major>.<minor>',
+      devBranchNamePattern: 'v<major>.x',
+      ignoredBranches: ['v1.20'],
+      existingBranches: ['v1.20', 'v1.x', 'v2.0', 'v2.x'],
+      nextBranchName: 'v1.x'
+    },
+    {
+      description: 'Next minor version branches exists, but is ignored',
+      name: 'v1.19',
+      stableBranchNamePattern: 'v<major>.<minor>',
+      devBranchNamePattern: 'v<major>.x',
+      ignoredBranches: ['v1.20'],
+      existingBranches: ['v1.20', 'v1.21', 'v1.x', 'v2.0', 'v2.x'],
+      nextBranchName: 'v1.21'
+    },
+    {
+      description: 'Next dev version branch exists, but is ignored',
+      name: 'v1.19',
+      stableBranchNamePattern: 'v<major>.<minor>',
+      devBranchNamePattern: 'v<major>.x',
+      ignoredBranches: ['v1.x'],
+      existingBranches: ['v1.x', 'v2.0', 'v2.x'],
+      nextBranchName: 'v2.0'
+    },
+    {
+      description: 'Next major stable version branch exists, but is ignored',
+      name: 'v1.19',
+      stableBranchNamePattern: 'v<major>.<minor>',
+      devBranchNamePattern: 'v<major>.x',
+      ignoredBranches: ['v2.0'],
+      existingBranches: ['v2.0', 'v2.x'],
+      nextBranchName: 'v2.x'
+    },
+    {
+      description: 'Next major stable version branches exists, but is ignored',
+      name: 'v1.19',
+      stableBranchNamePattern: 'v<major>.<minor>',
+      devBranchNamePattern: 'v<major>.x',
+      ignoredBranches: ['v2.0'],
+      existingBranches: ['v2.0', 'v2.1', 'v2.x'],
+      nextBranchName: 'v2.1'
+    },
+    {
+      description: 'Next major dev version branch exists, but is ignored',
+      name: 'v1.19',
+      stableBranchNamePattern: 'v<major>.<minor>',
+      devBranchNamePattern: 'v<major>.x',
+      ignoredBranches: ['v2.x'],
+      existingBranches: ['v2.x'],
+      nextBranchName: 'fallback'
+    },
+    {
+      description: 'Next major dev version branches exists, but is ignored',
+      name: 'v1.19',
+      stableBranchNamePattern: 'v<major>.<minor>',
+      devBranchNamePattern: 'v<major>.x',
+      ignoredBranches: ['v2.x'],
+      existingBranches: ['v2.x', 'v3.x'],
+      nextBranchName: 'v3.x'
     }
+    // TODO: The following test fails as we don't try stable branches for future major versions
+    // {
+    //   description: 'All existing branches for next major version are ignored',
+    //   name: 'v1.19',
+    //   stableBranchNamePattern: 'v<major>.<minor>',
+    //   devBranchNamePattern: 'v<major>.x',
+    //   ignoredBranches: ['v2.x', 'v2.0'],
+    //   existingBranches: ['v2.0', 'v2.x', 'v3.0', 'v3.x'],
+    //   nextBranchName: 'v3.0'
+    // }
   ]
 
   describe('constructor', () => {
@@ -170,6 +302,7 @@ describe('Branch', () => {
         name,
         stableBranchNamePattern,
         devBranchNamePattern,
+        ignoredBranches,
         majorVersion,
         minorVersion,
         isStable
@@ -177,7 +310,8 @@ describe('Branch', () => {
         const branch = new Branch(
           name,
           stableBranchNamePattern,
-          devBranchNamePattern
+          devBranchNamePattern,
+          ignoredBranches
         )
 
         expect(branch.name).toStrictEqual(name)
@@ -191,7 +325,7 @@ describe('Branch', () => {
     )
 
     it("rejects branches that don't match ($description)", () => {
-      expect(() => new Branch('1.19', 'v<major>.<minor>', '')).toThrow(
+      expect(() => new Branch('1.19', 'v<major>.<minor>', '', [])).toThrow(
         new Error(
           `Ref name "1.19" does not match branch name patterns "v<major>.<minor>" or "".`
         )
@@ -206,12 +340,14 @@ describe('Branch', () => {
         name,
         stableBranchNamePattern,
         devBranchNamePattern,
+        ignoredBranches,
         nextMajorStableBranch
       }) => {
         const branch = new Branch(
           name,
           stableBranchNamePattern,
-          devBranchNamePattern
+          devBranchNamePattern,
+          ignoredBranches
         )
 
         expect(branch.getNextMajorStableBranch()).toStrictEqual(
@@ -228,12 +364,14 @@ describe('Branch', () => {
         name,
         stableBranchNamePattern,
         devBranchNamePattern,
+        ignoredBranches,
         nextMinorStableBranch
       }) => {
         const branch = new Branch(
           name,
           stableBranchNamePattern,
-          devBranchNamePattern
+          devBranchNamePattern,
+          ignoredBranches
         )
 
         expect(branch.getNextMinorStableBranch()).toStrictEqual(
@@ -250,12 +388,14 @@ describe('Branch', () => {
         name,
         stableBranchNamePattern,
         devBranchNamePattern,
+        ignoredBranches,
         nextMajorDevBranch
       }) => {
         const branch = new Branch(
           name,
           stableBranchNamePattern,
-          devBranchNamePattern
+          devBranchNamePattern,
+          ignoredBranches
         )
 
         expect(branch.getNextMajorDevBranch()).toStrictEqual(nextMajorDevBranch)
@@ -270,12 +410,14 @@ describe('Branch', () => {
         name,
         stableBranchNamePattern,
         devBranchNamePattern,
+        ignoredBranches,
         nextMinorDevBranch
       }) => {
         const branch = new Branch(
           name,
           stableBranchNamePattern,
-          devBranchNamePattern
+          devBranchNamePattern,
+          ignoredBranches
         )
 
         expect(branch.getNextMinorDevBranch()).toStrictEqual(nextMinorDevBranch)
@@ -290,7 +432,7 @@ describe('Branch', () => {
         return false
       })
 
-      const branch = new Branch('v1.20', 'v<major>.<minor>', '')
+      const branch = new Branch('v1.20', 'v<major>.<minor>', '', [])
 
       await expect(branch.getNextBranchName('')).rejects.toThrow(
         new Error(
@@ -305,6 +447,7 @@ describe('Branch', () => {
         name,
         stableBranchNamePattern,
         devBranchNamePattern,
+        ignoredBranches,
         existingBranches,
         nextBranchName
       }) => {
@@ -316,7 +459,8 @@ describe('Branch', () => {
         const branch = new Branch(
           name,
           stableBranchNamePattern,
-          devBranchNamePattern
+          devBranchNamePattern,
+          ignoredBranches
         )
 
         expect(await branch.getNextBranchName('fallback')).toStrictEqual(
