@@ -80,7 +80,11 @@ export async function createMergeUpPullRequest(): Promise<void> {
     // Enable auto-merge if requested
     if (inputs.enableAutoMerge) {
       await core.group('Enable auto-merge', async () =>
-        git.enableAutoMerge(pullRequest.id)
+        git.enableAutoMerge(
+          pullRequest.id,
+          inputs.currentBranch,
+          nextBranchName
+        )
       )
     }
 
