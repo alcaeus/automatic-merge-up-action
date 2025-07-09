@@ -52,7 +52,7 @@ ${formattedCommitList}
   <summary><h2>Resolving conflicts</h2></summary>
   To resolve any conflicts, check out the temporary branch and run the following command:
 
-    git merge ${baseName}
+    git merge ${baseName} -m "Resolve conflicts in ${baseName}"
 </details>
 
 <details>
@@ -60,7 +60,7 @@ ${formattedCommitList}
   To ignore from the remote branch, first reset the temporary branch to ${baseName} and manually merge using the \`ours\` merge strategy:
 
     git reset --hard ${baseName}
-    git merge --strategy=ours ${branchName}
+    git merge --strategy=ours ${branchName} -m "Ignore changes from ${branchName}"
 
   Then, push the temporary branch to upate the pull request.
 </details>`
@@ -107,13 +107,19 @@ export async function hasNewCommits(
   return !regex.test(output.stdout)
 }
 
-export async function enableAutoMerge(pullRequestId: number): Promise<void> {
+export async function enableAutoMerge(
+  pullRequestId: number,
+  branchName: string,
+  baseName: string
+): Promise<void> {
   await exec.exec('gh', [
     'pr',
     'merge',
     pullRequestId.toString(),
+    '--subject',
+    `Merge ${branchName} into ${baseName} (#${pullRequestId})`,
     '--auto', // Enable auto-merge
-    '-m' // Use merge commit strategy
+    '--merge' // Use merge commit strategy
   ])
 }
 

@@ -25586,7 +25586,7 @@ ${formattedCommitList}
   <summary><h2>Resolving conflicts</h2></summary>
   To resolve any conflicts, check out the temporary branch and run the following command:
 
-    git merge ${baseName}
+    git merge ${baseName} -m "Resolve conflicts in ${baseName}"
 </details>
 
 <details>
@@ -25594,7 +25594,7 @@ ${formattedCommitList}
   To ignore from the remote branch, first reset the temporary branch to ${baseName} and manually merge using the \`ours\` merge strategy:
 
     git reset --hard ${baseName}
-    git merge --strategy=ours ${branchName}
+    git merge --strategy=ours ${branchName} -m "Ignore changes from ${branchName}"
 
   Then, push the temporary branch to upate the pull request.
 </details>`;
@@ -25622,13 +25622,15 @@ async function hasNewCommits(branchName, baseName) {
     const regex = new RegExp(`${escapedRegex}$`, 'm');
     return !regex.test(output.stdout);
 }
-async function enableAutoMerge(pullRequestId) {
+async function enableAutoMerge(pullRequestId, branchName, baseName) {
     await exec.exec('gh', [
         'pr',
         'merge',
         pullRequestId.toString(),
+        '--subject',
+        `Merge ${branchName} into ${baseName} (#${pullRequestId})`,
         '--auto', // Enable auto-merge
-        '-m' // Use merge commit strategy
+        '--merge' // Use merge commit strategy
     ]);
 }
 async function getCommitList(branchName, baseName) {
@@ -25834,7 +25836,7 @@ async function createMergeUpPullRequest() {
         }
         // Enable auto-merge if requested
         if (inputs.enableAutoMerge) {
-            await core.group('Enable auto-merge', async () => git.enableAutoMerge(pullRequest.id));
+            await core.group('Enable auto-merge', async () => git.enableAutoMerge(pullRequest.id, inputs.currentBranch, nextBranchName));
         }
         core.setOutput('pullRequestUrl', pullRequest.url);
         core.setOutput('branchName', newBranchName);
