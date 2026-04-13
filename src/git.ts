@@ -62,7 +62,7 @@ ${formattedCommitList}
     git reset --hard ${baseName}
     git merge --strategy=ours ${branchName} -m "Ignore changes from ${branchName}"
 
-  Then, push the temporary branch to upate the pull request.
+  Then, push the temporary branch to update the pull request.
 </details>`
 
   const options: ExecOptions = {
