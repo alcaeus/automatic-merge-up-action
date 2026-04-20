@@ -70,7 +70,7 @@
   "devDependencies": {
     "@types/jest": "^30.0.0",
     "@types/node": "^25.6.0",
-    "@typescript-eslint/eslint-plugin": "^8.58.1",
+    "@typescript-eslint/eslint-plugin": "^8.58.2",
     "@typescript-eslint/parser": "^8.45.0",
     "@vercel/ncc": "^0.38.4",
     "eslint": "^8.57.1",
@@ -80,7 +80,7 @@
     "eslint-plugin-prettier": "^5.5.5",
     "jest": "^30.3.0",
     "make-coverage-badge": "^1.2.0",
-    "prettier": "^3.8.2",
+    "prettier": "^3.8.3",
     "prettier-eslint": "^16.4.2",
     "ts-jest": "^29.4.9",
     "typescript": "^5.9.3"
