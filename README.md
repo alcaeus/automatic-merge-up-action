@@ -150,6 +150,12 @@ functionality has to be enabled on the repository, and the "merge" merge
 strategy has to be available. Automatic merges are always done using the "merge"
 strategy.
 
+### labels (optional)
+
+A comma-separated list of labels to add to the created pull request (e.g.
+`merge-up` or `merge-up,automated`). The labels must already exist in the
+repository. By default, no labels are added.
+
 ## Determine next branch
 
 There is a separate action named `get-next-branch` that can be used to run the

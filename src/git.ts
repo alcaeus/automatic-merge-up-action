@@ -35,7 +35,8 @@ export async function pushBranch(branchName: string): Promise<void> {
 
 export async function createPullRequest(
   branchName: string,
-  baseName: string
+  baseName: string,
+  labels: string[] = []
 ): Promise<PullRequestResult> {
   const title = `Merge ${branchName} into ${baseName}`
   const formattedCommitList: string = formatCommits(
@@ -69,11 +70,21 @@ ${formattedCommitList}
     input: Buffer.from(bodyText)
   }
 
-  const output: ExecOutput = await exec.getExecOutput(
-    'gh',
-    ['pr', 'create', '--base', baseName, '--title', title, '--body-file', '-'],
-    options
-  )
+  const args = [
+    'pr',
+    'create',
+    '--base',
+    baseName,
+    '--title',
+    title,
+    '--body-file',
+    '-'
+  ]
+  for (const label of labels) {
+    args.push('--label', label)
+  }
+
+  const output: ExecOutput = await exec.getExecOutput('gh', args, options)
 
   const matches = output.stdout.match(
     /(https:\/\/github\.com\/.+\/pull\/(\d+))$/m

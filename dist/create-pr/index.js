@@ -25573,7 +25573,7 @@ async function createBranch(branchName) {
 async function pushBranch(branchName) {
     await exec.getExecOutput('git', ['push', 'origin', branchName]);
 }
-async function createPullRequest(branchName, baseName) {
+async function createPullRequest(branchName, baseName, labels = []) {
     const title = `Merge ${branchName} into ${baseName}`;
     const formattedCommitList = formatCommits(await getCommitList(branchName, baseName));
     const bodyText = `
@@ -25601,7 +25601,20 @@ ${formattedCommitList}
     const options = {
         input: Buffer.from(bodyText)
     };
-    const output = await exec.getExecOutput('gh', ['pr', 'create', '--base', baseName, '--title', title, '--body-file', '-'], options);
+    const args = [
+        'pr',
+        'create',
+        '--base',
+        baseName,
+        '--title',
+        title,
+        '--body-file',
+        '-'
+    ];
+    for (const label of labels) {
+        args.push('--label', label);
+    }
+    const output = await exec.getExecOutput('gh', args, options);
     const matches = output.stdout.match(/(https:\/\/github\.com\/.+\/pull\/(\d+))$/m);
     if (!matches) {
         throw new Error('Pull request created, but could not match pull request URL');
@@ -25714,17 +25727,25 @@ class Inputs {
     fallbackBranch;
     enableAutoMerge;
     ignoredBranches;
-    constructor(currentBranch, stableBranchNamePattern, devBranchNamePattern, fallbackBranch, enableAutoMerge, ignoredBranches) {
+    labels;
+    constructor(currentBranch, stableBranchNamePattern, devBranchNamePattern, fallbackBranch, enableAutoMerge, ignoredBranches, labels = []) {
         this.currentBranch = currentBranch;
         this.stableBranchNamePattern = stableBranchNamePattern;
         this.devBranchNamePattern = devBranchNamePattern;
         this.fallbackBranch = fallbackBranch;
         this.enableAutoMerge = enableAutoMerge;
         this.ignoredBranches = ignoredBranches;
+        this.labels = labels;
     }
     static fromActionsInput(includeAutoMergeOption = true) {
         const ignoredBranches = core.getInput('ignoredBranches');
-        return new Inputs(core.getInput('ref'), core.getInput('branchNamePattern'), core.getInput('devBranchNamePattern'), core.getInput('fallbackBranch'), includeAutoMergeOption ? core.getBooleanInput('enableAutoMerge') : false, ignoredBranches ? JSON.parse(ignoredBranches) : []);
+        const labels = core.getInput('labels');
+        return new Inputs(core.getInput('ref'), core.getInput('branchNamePattern'), core.getInput('devBranchNamePattern'), core.getInput('fallbackBranch'), includeAutoMergeOption ? core.getBooleanInput('enableAutoMerge') : false, ignoredBranches ? JSON.parse(ignoredBranches) : [], labels
+            ? labels
+                .split(',')
+                .map(label => label.trim())
+                .filter(label => label.length > 0)
+            : []);
     }
 }
 exports.Inputs = Inputs;
@@ -25827,7 +25848,7 @@ async function createMergeUpPullRequest() {
             core.summary.addRaw(`:x: ${message}`, true);
             return;
         }
-        const pullRequest = await core.group('Create pull request', async () => git.createPullRequest(inputs.currentBranch, nextBranchName));
+        const pullRequest = await core.group('Create pull request', async () => git.createPullRequest(inputs.currentBranch, nextBranchName, inputs.labels));
         if (!pullRequest) {
             const message = 'Could not create new pull request';
             core.setFailed(message);
