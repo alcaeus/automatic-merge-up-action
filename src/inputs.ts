@@ -7,6 +7,7 @@ export class Inputs {
   readonly fallbackBranch: string
   readonly enableAutoMerge: boolean
   readonly ignoredBranches: string[]
+  readonly labels: string[]
 
   constructor(
     currentBranch: string,
@@ -14,7 +15,8 @@ export class Inputs {
     devBranchNamePattern: string,
     fallbackBranch: string,
     enableAutoMerge: boolean,
-    ignoredBranches: string[]
+    ignoredBranches: string[],
+    labels: string[] = []
   ) {
     this.currentBranch = currentBranch
     this.stableBranchNamePattern = stableBranchNamePattern
@@ -22,10 +24,12 @@ export class Inputs {
     this.fallbackBranch = fallbackBranch
     this.enableAutoMerge = enableAutoMerge
     this.ignoredBranches = ignoredBranches
+    this.labels = labels
   }
 
   static fromActionsInput(includeAutoMergeOption = true): Inputs {
     const ignoredBranches = core.getInput('ignoredBranches')
+    const labels = core.getInput('labels')
 
     return new Inputs(
       core.getInput('ref'),
@@ -33,7 +37,13 @@ export class Inputs {
       core.getInput('devBranchNamePattern'),
       core.getInput('fallbackBranch'),
       includeAutoMergeOption ? core.getBooleanInput('enableAutoMerge') : false,
-      ignoredBranches ? JSON.parse(ignoredBranches) : []
+      ignoredBranches ? JSON.parse(ignoredBranches) : [],
+      labels
+        ? labels
+            .split(',')
+            .map(label => label.trim())
+            .filter(label => label.length > 0)
+        : []
     )
   }
 }

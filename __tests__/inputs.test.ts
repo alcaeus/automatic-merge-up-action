@@ -12,7 +12,8 @@ describe('Inputs', () => {
       'v<major>.x',
       'main',
       true,
-      ['v1.x']
+      ['v1.x'],
+      ['merge-up']
     )
 
     expect(inputs.currentBranch).toStrictEqual('v1.19')
@@ -21,6 +22,7 @@ describe('Inputs', () => {
     expect(inputs.fallbackBranch).toStrictEqual('main')
     expect(inputs.enableAutoMerge).toStrictEqual(true)
     expect(inputs.ignoredBranches).toStrictEqual(['v1.x'])
+    expect(inputs.labels).toStrictEqual(['merge-up'])
   })
 
   it('retrieves values from input', async () => {
@@ -37,6 +39,8 @@ describe('Inputs', () => {
           return 'main'
         case 'ignoredBranches':
           return '["v1.x"]'
+        case 'labels':
+          return 'merge-up, automated'
         default:
           return ''
       }
@@ -62,8 +66,9 @@ describe('Inputs', () => {
     expect(inputs.enableAutoMerge).toStrictEqual(true)
     expect(inputs.fallbackBranch).toStrictEqual('main')
     expect(inputs.ignoredBranches).toStrictEqual(['v1.x'])
+    expect(inputs.labels).toStrictEqual(['merge-up', 'automated'])
 
-    expect(getInputMock).toHaveBeenCalledTimes(5)
+    expect(getInputMock).toHaveBeenCalledTimes(6)
     expect(getBooleanInputMock).toHaveBeenCalledTimes(1)
   })
 
@@ -100,8 +105,9 @@ describe('Inputs', () => {
     const inputs = Inputs.fromActionsInput()
 
     expect(inputs.enableAutoMerge).toStrictEqual(false)
+    expect(inputs.labels).toStrictEqual([])
 
-    expect(getInputMock).toHaveBeenCalledTimes(5)
+    expect(getInputMock).toHaveBeenCalledTimes(6)
     expect(getBooleanInputMock).toHaveBeenCalledTimes(1)
   })
 })

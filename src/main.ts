@@ -68,7 +68,7 @@ export async function createMergeUpPullRequest(): Promise<void> {
     }
 
     const pullRequest = await core.group('Create pull request', async () =>
-      git.createPullRequest(inputs.currentBranch, nextBranchName)
+      git.createPullRequest(inputs.currentBranch, nextBranchName, inputs.labels)
     )
     if (!pullRequest) {
       const message = 'Could not create new pull request'

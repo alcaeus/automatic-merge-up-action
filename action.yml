@@ -35,6 +35,11 @@ inputs:
     description: 'JSON list of branches to ignore'
     required: false
     default: '[]'
+  labels:
+    description:
+      'Comma-separated list of labels to add to the created pull request'
+    required: false
+    default: ''
 
 outputs:
   branchName:
