@@ -13,7 +13,8 @@ describe('Inputs', () => {
       'main',
       true,
       ['v1.x'],
-      ['merge-up']
+      ['merge-up'],
+      true
     )
 
     expect(inputs.currentBranch).toStrictEqual('v1.19')
@@ -23,6 +24,7 @@ describe('Inputs', () => {
     expect(inputs.enableAutoMerge).toStrictEqual(true)
     expect(inputs.ignoredBranches).toStrictEqual(['v1.x'])
     expect(inputs.labels).toStrictEqual(['merge-up'])
+    expect(inputs.assignApprover).toStrictEqual(true)
   })
 
   it('retrieves values from input', async () => {
@@ -53,6 +55,8 @@ describe('Inputs', () => {
       switch (name) {
         case 'enableAutoMerge':
           return true
+        case 'assignApprover':
+          return true
         default:
           return false
       }
@@ -67,9 +71,10 @@ describe('Inputs', () => {
     expect(inputs.fallbackBranch).toStrictEqual('main')
     expect(inputs.ignoredBranches).toStrictEqual(['v1.x'])
     expect(inputs.labels).toStrictEqual(['merge-up', 'automated'])
+    expect(inputs.assignApprover).toStrictEqual(true)
 
     expect(getInputMock).toHaveBeenCalledTimes(6)
-    expect(getBooleanInputMock).toHaveBeenCalledTimes(1)
+    expect(getBooleanInputMock).toHaveBeenCalledTimes(2)
   })
 
   it('allows disabling automerge', async () => {
@@ -106,8 +111,9 @@ describe('Inputs', () => {
 
     expect(inputs.enableAutoMerge).toStrictEqual(false)
     expect(inputs.labels).toStrictEqual([])
+    expect(inputs.assignApprover).toStrictEqual(false)
 
     expect(getInputMock).toHaveBeenCalledTimes(6)
-    expect(getBooleanInputMock).toHaveBeenCalledTimes(1)
+    expect(getBooleanInputMock).toHaveBeenCalledTimes(2)
   })
 })

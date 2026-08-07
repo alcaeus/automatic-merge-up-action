@@ -40,6 +40,12 @@ inputs:
       'Comma-separated list of labels to add to the created pull request'
     required: false
     default: ''
+  assignApprover:
+    description:
+      'If non-empty, assigns the created pull request to the user who approved
+      the pull request that was just merged into the source branch'
+    required: false
+    default: 'false'
 
 outputs:
   branchName:

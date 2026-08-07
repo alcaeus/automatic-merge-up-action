@@ -26027,6 +26027,7 @@ exports.branchExists = branchExists;
 exports.createBranch = createBranch;
 exports.pushBranch = pushBranch;
 exports.createPullRequest = createPullRequest;
+exports.getMergedPullRequestApprover = getMergedPullRequestApprover;
 exports.hasNewCommits = hasNewCommits;
 exports.enableAutoMerge = enableAutoMerge;
 const exec = __importStar(__nccwpck_require__(5236));
@@ -26046,7 +26047,7 @@ async function createBranch(branchName) {
 async function pushBranch(branchName) {
     await exec.getExecOutput('git', ['push', 'origin', branchName]);
 }
-async function createPullRequest(branchName, baseName, labels = []) {
+async function createPullRequest(branchName, baseName, labels = [], assignee) {
     const title = `Merge ${branchName} into ${baseName}`;
     const formattedCommitList = formatCommits(await getCommitList(branchName, baseName));
     const bodyText = `
@@ -26087,6 +26088,9 @@ ${formattedCommitList}
     for (const label of labels) {
         args.push('--label', label);
     }
+    if (assignee) {
+        args.push('--assignee', assignee);
+    }
     const output = await exec.getExecOutput('gh', args, options);
     const matches = output.stdout.match(/(https:\/\/github\.com\/.+\/pull\/(\d+))$/m);
     if (!matches) {
@@ -26096,6 +26100,28 @@ ${formattedCommitList}
         id: Number(matches[2]),
         url: matches[1]
     };
+}
+async function getMergedPullRequestApprover(sha) {
+    // Find the pull request that was merged by the pushed commit
+    const prOutput = await exec.getExecOutput('gh', [
+        'api',
+        `repos/{owner}/{repo}/commits/${sha}/pulls`,
+        '--jq',
+        '[.[] | select(.merged_at != null)] | first | .number // empty'
+    ]);
+    const pullRequestNumber = prOutput.stdout.trim();
+    if (!pullRequestNumber) {
+        return undefined;
+    }
+    // Resolve the login of the last user who approved that pull request
+    const reviewOutput = await exec.getExecOutput('gh', [
+        'api',
+        `repos/{owner}/{repo}/pulls/${pullRequestNumber}/reviews`,
+        '--jq',
+        '[.[] | select(.state == "APPROVED")] | last | .user.login // empty'
+    ]);
+    const approver = reviewOutput.stdout.trim();
+    return approver || undefined;
 }
 async function hasNewCommits(branchName, baseName) {
     const output = await exec.getExecOutput('git', [
@@ -26201,7 +26227,8 @@ class Inputs {
     enableAutoMerge;
     ignoredBranches;
     labels;
-    constructor(currentBranch, stableBranchNamePattern, devBranchNamePattern, fallbackBranch, enableAutoMerge, ignoredBranches, labels = []) {
+    assignApprover;
+    constructor(currentBranch, stableBranchNamePattern, devBranchNamePattern, fallbackBranch, enableAutoMerge, ignoredBranches, labels = [], assignApprover = false) {
         this.currentBranch = currentBranch;
         this.stableBranchNamePattern = stableBranchNamePattern;
         this.devBranchNamePattern = devBranchNamePattern;
@@ -26209,16 +26236,19 @@ class Inputs {
         this.enableAutoMerge = enableAutoMerge;
         this.ignoredBranches = ignoredBranches;
         this.labels = labels;
+        this.assignApprover = assignApprover;
     }
-    static fromActionsInput(includeAutoMergeOption = true) {
+    static fromActionsInput(includePullRequestOptions = true) {
         const ignoredBranches = core.getInput('ignoredBranches');
         const labels = core.getInput('labels');
-        return new Inputs(core.getInput('ref'), core.getInput('branchNamePattern'), core.getInput('devBranchNamePattern'), core.getInput('fallbackBranch'), includeAutoMergeOption ? core.getBooleanInput('enableAutoMerge') : false, ignoredBranches ? JSON.parse(ignoredBranches) : [], labels
+        return new Inputs(core.getInput('ref'), core.getInput('branchNamePattern'), core.getInput('devBranchNamePattern'), core.getInput('fallbackBranch'), includePullRequestOptions
+            ? core.getBooleanInput('enableAutoMerge')
+            : false, ignoredBranches ? JSON.parse(ignoredBranches) : [], labels
             ? labels
                 .split(',')
                 .map(label => label.trim())
                 .filter(label => label.length > 0)
-            : []);
+            : [], includePullRequestOptions ? core.getBooleanInput('assignApprover') : false);
     }
 }
 exports.Inputs = Inputs;
@@ -26321,7 +26351,24 @@ async function createMergeUpPullRequest() {
             core.summary.addRaw(`:x: ${message}`, true);
             return;
         }
-        const pullRequest = await core.group('Create pull request', async () => git.createPullRequest(inputs.currentBranch, nextBranchName, inputs.labels));
+        // Determine the assignee (the approver of the merged pull request) if requested
+        let assignee;
+        if (inputs.assignApprover) {
+            assignee = await core.group('Determine approver', async () => {
+                try {
+                    return await git.getMergedPullRequestApprover(process.env.GITHUB_SHA ?? '');
+                }
+                catch (error) {
+                    const message = error instanceof Error ? error.message : String(error);
+                    core.info(`Could not determine the approver: ${message}`);
+                    return undefined;
+                }
+            });
+            if (!assignee) {
+                core.info('No approver found for the merged pull request; creating the pull request without an assignee');
+            }
+        }
+        const pullRequest = await core.group('Create pull request', async () => git.createPullRequest(inputs.currentBranch, nextBranchName, inputs.labels, assignee));
         if (!pullRequest) {
             const message = 'Could not create new pull request';
             core.setFailed(message);
