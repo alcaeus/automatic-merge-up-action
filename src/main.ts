@@ -67,8 +67,34 @@ export async function createMergeUpPullRequest(): Promise<void> {
       return
     }
 
+    // Determine the assignee (the approver of the merged pull request) if requested
+    let assignee: string | undefined
+    if (inputs.assignApprover) {
+      assignee = await core.group('Determine approver', async () => {
+        try {
+          return await git.getMergedPullRequestApprover(
+            process.env.GITHUB_SHA ?? ''
+          )
+        } catch (error) {
+          const message = error instanceof Error ? error.message : String(error)
+          core.info(`Could not determine the approver: ${message}`)
+          return undefined
+        }
+      })
+      if (!assignee) {
+        core.info(
+          'No approver found for the merged pull request; creating the pull request without an assignee'
+        )
+      }
+    }
+
     const pullRequest = await core.group('Create pull request', async () =>
-      git.createPullRequest(inputs.currentBranch, nextBranchName, inputs.labels)
+      git.createPullRequest(
+        inputs.currentBranch,
+        nextBranchName,
+        inputs.labels,
+        assignee
+      )
     )
     if (!pullRequest) {
       const message = 'Could not create new pull request'

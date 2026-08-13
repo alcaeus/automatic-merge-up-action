@@ -8,6 +8,7 @@ export class Inputs {
   readonly enableAutoMerge: boolean
   readonly ignoredBranches: string[]
   readonly labels: string[]
+  readonly assignApprover: boolean
 
   constructor(
     currentBranch: string,
@@ -16,7 +17,8 @@ export class Inputs {
     fallbackBranch: string,
     enableAutoMerge: boolean,
     ignoredBranches: string[],
-    labels: string[] = []
+    labels: string[] = [],
+    assignApprover = false
   ) {
     this.currentBranch = currentBranch
     this.stableBranchNamePattern = stableBranchNamePattern
@@ -25,9 +27,10 @@ export class Inputs {
     this.enableAutoMerge = enableAutoMerge
     this.ignoredBranches = ignoredBranches
     this.labels = labels
+    this.assignApprover = assignApprover
   }
 
-  static fromActionsInput(includeAutoMergeOption = true): Inputs {
+  static fromActionsInput(includePullRequestOptions = true): Inputs {
     const ignoredBranches = core.getInput('ignoredBranches')
     const labels = core.getInput('labels')
 
@@ -36,14 +39,17 @@ export class Inputs {
       core.getInput('branchNamePattern'),
       core.getInput('devBranchNamePattern'),
       core.getInput('fallbackBranch'),
-      includeAutoMergeOption ? core.getBooleanInput('enableAutoMerge') : false,
+      includePullRequestOptions
+        ? core.getBooleanInput('enableAutoMerge')
+        : false,
       ignoredBranches ? JSON.parse(ignoredBranches) : [],
       labels
         ? labels
             .split(',')
             .map(label => label.trim())
             .filter(label => label.length > 0)
-        : []
+        : [],
+      includePullRequestOptions ? core.getBooleanInput('assignApprover') : false
     )
   }
 }

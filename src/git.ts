@@ -36,7 +36,8 @@ export async function pushBranch(branchName: string): Promise<void> {
 export async function createPullRequest(
   branchName: string,
   baseName: string,
-  labels: string[] = []
+  labels: string[] = [],
+  assignee?: string
 ): Promise<PullRequestResult> {
   const title = `Merge ${branchName} into ${baseName}`
   const formattedCommitList: string = formatCommits(
@@ -83,6 +84,9 @@ ${formattedCommitList}
   for (const label of labels) {
     args.push('--label', label)
   }
+  if (assignee) {
+    args.push('--assignee', assignee)
+  }
 
   const output: ExecOutput = await exec.getExecOutput('gh', args, options)
 
@@ -99,6 +103,33 @@ ${formattedCommitList}
     id: Number(matches[2]),
     url: matches[1]
   }
+}
+
+export async function getMergedPullRequestApprover(
+  sha: string
+): Promise<string | undefined> {
+  // Find the pull request that was merged by the pushed commit
+  const prOutput: ExecOutput = await exec.getExecOutput('gh', [
+    'api',
+    `repos/{owner}/{repo}/commits/${sha}/pulls`,
+    '--jq',
+    '[.[] | select(.merged_at != null)] | first | .number // empty'
+  ])
+  const pullRequestNumber = prOutput.stdout.trim()
+  if (!pullRequestNumber) {
+    return undefined
+  }
+
+  // Resolve the login of the last user who approved that pull request
+  const reviewOutput: ExecOutput = await exec.getExecOutput('gh', [
+    'api',
+    `repos/{owner}/{repo}/pulls/${pullRequestNumber}/reviews`,
+    '--jq',
+    '[.[] | select(.state == "APPROVED")] | last | .user.login // empty'
+  ])
+  const approver = reviewOutput.stdout.trim()
+
+  return approver || undefined
 }
 
 export async function hasNewCommits(

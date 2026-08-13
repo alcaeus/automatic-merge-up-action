@@ -156,6 +156,12 @@ A comma-separated list of labels to add to the created pull request (e.g.
 `merge-up` or `merge-up,automated`). The labels must already exist in the
 repository. By default, no labels are added.
 
+### assignApprover (optional)
+
+When this option is enabled (using a truish value), the created pull request is
+assigned to the user who approved the pull request that was just merged into the
+source branch.
+
 ## Determine next branch
 
 There is a separate action named `get-next-branch` that can be used to run the
