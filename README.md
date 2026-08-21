@@ -158,9 +158,9 @@ repository. By default, no labels are added.
 
 ### assignApprover (optional)
 
-When this option is enabled (using a truish value), the created pull request is
-assigned to the user who approved the pull request that was just merged into the
-source branch.
+When this option is enabled (using a truish value), a review is requested on the
+created pull request from the user who approved the pull request that was just
+merged into the source branch.
 
 ## Determine next branch
 

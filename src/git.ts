@@ -37,7 +37,7 @@ export async function createPullRequest(
   branchName: string,
   baseName: string,
   labels: string[] = [],
-  assignee?: string
+  reviewer?: string
 ): Promise<PullRequestResult> {
   const title = `Merge ${branchName} into ${baseName}`
   const formattedCommitList: string = formatCommits(
@@ -84,8 +84,8 @@ ${formattedCommitList}
   for (const label of labels) {
     args.push('--label', label)
   }
-  if (assignee) {
-    args.push('--assignee', assignee)
+  if (reviewer) {
+    args.push('--reviewer', reviewer)
   }
 
   const output: ExecOutput = await exec.getExecOutput('gh', args, options)

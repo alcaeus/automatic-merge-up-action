@@ -67,10 +67,10 @@ export async function createMergeUpPullRequest(): Promise<void> {
       return
     }
 
-    // Determine the assignee (the approver of the merged pull request) if requested
-    let assignee: string | undefined
+    // Determine the reviewer (the approver of the merged pull request) if requested
+    let reviewer: string | undefined
     if (inputs.assignApprover) {
-      assignee = await core.group('Determine approver', async () => {
+      reviewer = await core.group('Determine approver', async () => {
         try {
           return await git.getMergedPullRequestApprover(
             process.env.GITHUB_SHA ?? ''
@@ -81,9 +81,9 @@ export async function createMergeUpPullRequest(): Promise<void> {
           return undefined
         }
       })
-      if (!assignee) {
+      if (!reviewer) {
         core.info(
-          'No approver found for the merged pull request; creating the pull request without an assignee'
+          'No approver found for the merged pull request; creating the pull request without requesting a review'
         )
       }
     }
@@ -93,7 +93,7 @@ export async function createMergeUpPullRequest(): Promise<void> {
         inputs.currentBranch,
         nextBranchName,
         inputs.labels,
-        assignee
+        reviewer
       )
     )
     if (!pullRequest) {

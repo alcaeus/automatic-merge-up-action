@@ -42,8 +42,9 @@ inputs:
     default: ''
   assignApprover:
     description:
-      'If non-empty, assigns the created pull request to the user who approved
-      the pull request that was just merged into the source branch'
+      'If non-empty, requests a review on the created pull request from the
+      user who approved the pull request that was just merged into the source
+      branch'
     required: false
     default: 'false'
 
