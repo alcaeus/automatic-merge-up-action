@@ -26047,7 +26047,7 @@ async function createBranch(branchName) {
 async function pushBranch(branchName) {
     await exec.getExecOutput('git', ['push', 'origin', branchName]);
 }
-async function createPullRequest(branchName, baseName, labels = [], assignee) {
+async function createPullRequest(branchName, baseName, labels = [], reviewer) {
     const title = `Merge ${branchName} into ${baseName}`;
     const formattedCommitList = formatCommits(await getCommitList(branchName, baseName));
     const bodyText = `
@@ -26088,8 +26088,8 @@ ${formattedCommitList}
     for (const label of labels) {
         args.push('--label', label);
     }
-    if (assignee) {
-        args.push('--assignee', assignee);
+    if (reviewer) {
+        args.push('--reviewer', reviewer);
     }
     const output = await exec.getExecOutput('gh', args, options);
     const matches = output.stdout.match(/(https:\/\/github\.com\/.+\/pull\/(\d+))$/m);
@@ -26351,10 +26351,10 @@ async function createMergeUpPullRequest() {
             core.summary.addRaw(`:x: ${message}`, true);
             return;
         }
-        // Determine the assignee (the approver of the merged pull request) if requested
-        let assignee;
+        // Determine the reviewer (the approver of the merged pull request) if requested
+        let reviewer;
         if (inputs.assignApprover) {
-            assignee = await core.group('Determine approver', async () => {
+            reviewer = await core.group('Determine approver', async () => {
                 try {
                     return await git.getMergedPullRequestApprover(process.env.GITHUB_SHA ?? '');
                 }
@@ -26364,11 +26364,11 @@ async function createMergeUpPullRequest() {
                     return undefined;
                 }
             });
-            if (!assignee) {
-                core.info('No approver found for the merged pull request; creating the pull request without an assignee');
+            if (!reviewer) {
+                core.info('No approver found for the merged pull request; creating the pull request without requesting a review');
             }
         }
-        const pullRequest = await core.group('Create pull request', async () => git.createPullRequest(inputs.currentBranch, nextBranchName, inputs.labels, assignee));
+        const pullRequest = await core.group('Create pull request', async () => git.createPullRequest(inputs.currentBranch, nextBranchName, inputs.labels, reviewer));
         if (!pullRequest) {
             const message = 'Could not create new pull request';
             core.setFailed(message);
