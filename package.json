@@ -25,7 +25,7 @@
     "coverage": "make-coverage-badge --output-path ./badges/coverage.svg",
     "format:write": "prettier --write **/*.ts",
     "format:check": "prettier --check **/*.ts",
-    "lint": "npx eslint . -c ./.github/linters/.eslintrc.yml",
+    "lint": "eslint . -c ./.github/linters/eslint.config.mjs",
     "package": "npm run package-create-pr && npm run package-get-next-branch",
     "package-create-pr": "ncc build src/create-pr.ts --out dist/create-pr --license licenses.txt",
     "package-get-next-branch": "ncc build src/get-next-branch.ts --out dist/get-next-branch --license licenses.txt",
@@ -51,7 +51,21 @@
       "/dist/"
     ],
     "transform": {
-      "^.+\\.ts$": "ts-jest"
+      "^.+\\.[tj]s$": [
+        "ts-jest",
+        {
+          "isolatedModules": true,
+          "tsconfig": {
+            "allowJs": true,
+            "module": "commonjs",
+            "esModuleInterop": true,
+            "types": [
+              "node",
+              "jest"
+            ]
+          }
+        }
+      ]
     },
     "coverageReporters": [
       "json-summary",
@@ -61,28 +75,34 @@
     "collectCoverage": true,
     "collectCoverageFrom": [
       "./src/**"
-    ]
+    ],
+    "transformIgnorePatterns": [
+      "/node_modules/(?!(@actions|undici|tunnel|@fastify)/)"
+    ],
+    "resolver": "<rootDir>/jest.resolver.cjs"
   },
   "dependencies": {
-    "@actions/core": "^2.0.1",
-    "@actions/exec": "^2.0.0"
+    "@actions/core": "^3.0.1",
+    "@actions/exec": "^3.0.0"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@types/jest": "^30.0.0",
-    "@types/node": "^25.9.2",
-    "@typescript-eslint/eslint-plugin": "^8.60.1",
-    "@typescript-eslint/parser": "^8.45.0",
-    "@vercel/ncc": "^0.38.4",
-    "eslint": "^8.57.1",
-    "eslint-plugin-github": "^5.1.8",
-    "eslint-plugin-jest": "^29.15.2",
-    "eslint-plugin-jsonc": "^2.21.1",
-    "eslint-plugin-prettier": "^5.5.6",
-    "jest": "^30.4.2",
+    "@types/node": "^26.6.6",
+    "@typescript-eslint/eslint-plugin": "^8.72.1",
+    "@typescript-eslint/parser": "^8.72.1",
+    "@vercel/ncc": "^0.45.0",
+    "eslint": "^10.14.0",
+    "eslint-plugin-github": "^6.1.2",
+    "eslint-plugin-jest": "^29.17.0",
+    "eslint-plugin-jsonc": "^3.4.2",
+    "eslint-plugin-prettier": "^5.5.7",
+    "globals": "^17.14.0",
+    "jest": "^30.5.2",
     "make-coverage-badge": "^1.2.0",
-    "prettier": "^3.8.3",
-    "prettier-eslint": "^16.4.2",
-    "ts-jest": "^29.4.11",
-    "typescript": "^5.9.3"
+    "prettier": "^3.9.10",
+    "prettier-eslint": "^17.1.2",
+    "ts-jest": "^29.4.15",
+    "typescript": "^6.0.3"
   }
 }
