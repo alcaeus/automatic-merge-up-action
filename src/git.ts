@@ -1,5 +1,5 @@
 import * as exec from '@actions/exec'
-import { ExecOptions, ExecOutput } from '@actions/exec'
+import type { ExecOptions, ExecOutput } from '@actions/exec'
 import { escapeRegex } from './regex'
 
 export type Commit = {
